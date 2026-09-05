@@ -60,5 +60,13 @@ public abstract class Conta {
 
         System.out.println("Saldo atual de: " +  this.getSaldo());
     }
+
+    protected void validarValor(double valor) throws ValorInvalidoException{
+        if(valor > 0){
+            System.out.println("Transação valida");
+        }else {
+            throw new ValorInvalidoException("Transação invalido");
+        }
+    }
 }
 

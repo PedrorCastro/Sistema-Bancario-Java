@@ -4,8 +4,7 @@ void main(){
 
     c1.depositar(1000);
     try {
-        c1.sacar(300);
-        c1.sacar(200);
+        c1.sacar(-100);
     }
     catch (SaldoInsuficienteException e) {
         System.out.println("Erro: " + e.getMessage());

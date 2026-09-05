@@ -1,5 +1,3 @@
-
-
 public class ContaCorrente extends Conta{
     private double limite;
 
@@ -16,18 +14,16 @@ public class ContaCorrente extends Conta{
     @Override
     public void sacar(double valor) throws SaldoInsuficienteException {
         double saldoDisponivel = this.getSaldo() + this.getLimite();
-        Transacao transacao = new Transacao(valor, TipoTransacao.SAQUE);
-        if (valor > 0) {
+        validarValor(valor);
+
             if (saldoDisponivel >= valor) {
                 this.setSaldo(this.getSaldo() - valor);
+                Transacao transacao = new Transacao(valor, TipoTransacao.SAQUE);
                 getHistorico().add(transacao);
                 System.out.println("Saque realizado com sucesso!");
             } else {
                 throw new SaldoInsuficienteException("Saque indisponivel! Valor de saque maior do que disponivel");
             }
-        } else {
-            System.out.println("Valor Negativo!");
-        }
 
         System.out.println("Saldo atual de: " +  this.getSaldo());
     }
