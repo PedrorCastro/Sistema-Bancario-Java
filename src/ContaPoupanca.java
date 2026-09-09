@@ -4,7 +4,7 @@ public class ContaPoupanca extends Conta{
     }
 
     @Override
-    public void sacar(double valor) throws SaldoInsuficienteException {
+    public void sacar(double valor) throws SaldoInsuficienteException, ValorInvalidoException {
 
 
         validarValor(valor);
@@ -20,6 +20,12 @@ public class ContaPoupanca extends Conta{
             }
     }
 
-
-
+    @Override
+    public String toString() {
+        return "ContaPoupanca{" +
+                "numero= " + getNumero() +
+                ", titular= " + (getTitular() != null ? getTitular().getNome() : "") +
+                ", saldo= " + getSaldo() +
+                '}';
+    }
 }
