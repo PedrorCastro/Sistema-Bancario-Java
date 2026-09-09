@@ -12,9 +12,9 @@ public class ContaCorrente extends Conta{
     }
 
     @Override
-    public void sacar(double valor) throws SaldoInsuficienteException {
-        double saldoDisponivel = this.getSaldo() + this.getLimite();
+    public void sacar(double valor) throws SaldoInsuficienteException, ValorInvalidoException {
         validarValor(valor);
+        double saldoDisponivel = this.getSaldo() + this.getLimite();
 
             if (saldoDisponivel >= valor) {
                 this.setSaldo(this.getSaldo() - valor);

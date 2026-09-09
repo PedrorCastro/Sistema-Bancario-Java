@@ -51,9 +51,10 @@ public abstract class Conta {
 
 
 
-    public abstract void sacar(double valor) throws SaldoInsuficienteException;
+    public abstract void sacar(double valor) throws SaldoInsuficienteException, ValorInvalidoException;
 
-    public void depositar(double valor){
+    public void depositar(double valor) throws ValorInvalidoException {
+        validarValor(valor);
         this.saldo += valor;
         Transacao transacao = new Transacao(valor, TipoTransacao.DEPOSITO);
         historico.add(transacao);
