@@ -19,4 +19,14 @@ public class ContaPoupanca extends Conta{
                 throw new SaldoInsuficienteException("Saldo Insuficiente");
             }
     }
+
+        @Override
+    public String toString() {
+        return "ContaPoupanca{" +
+                "numero=" + getNumero() +
+                ", titular=" + (getTitular() != null ? getTitular().getNome() : "null") +
+                ", saldo=" + getSaldo() +
+                '}';
+    }
+
 }
