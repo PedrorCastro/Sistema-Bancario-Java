@@ -1,3 +1,5 @@
+package org.pedro;
+
 public class ContaPoupanca extends Conta{
     public ContaPoupanca(Integer numero, Cliente titular) {
         super(numero, titular);

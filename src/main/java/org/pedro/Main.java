@@ -1,6 +1,9 @@
+import org.pedro.*;
+
 import java.util.Scanner;
 
-void main() throws SaldoInsuficienteException, ValorInvalidoException{
+
+void main() throws SaldoInsuficienteException, ValorInvalidoException {
 
     Scanner sc = new Scanner(System.in);
     Conta contaCriada;
