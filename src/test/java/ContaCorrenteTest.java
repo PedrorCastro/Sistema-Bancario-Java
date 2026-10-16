@@ -2,7 +2,7 @@ import org.junit.jupiter.api.Test;
 import org.pedro.*;
 import static org.junit.jupiter.api.Assertions.*;
 
-public class ContaCorreteTest {
+public class ContaCorrenteTest {
 
 
     @Test
