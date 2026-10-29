@@ -40,3 +40,7 @@ build/
 
 ### Mimosa (ferramenta local) ###
 .mimosa/
+
+### Agents & Tooling ###
+.agents/
+*.html
