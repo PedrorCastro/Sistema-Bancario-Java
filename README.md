@@ -159,7 +159,9 @@ Sistema-Bancario-Java/
 | ☕ **Java 17 LTS** | Linguagem principal do projeto |
 | 🍃 **Spring Boot 4 / 3** | Framework base da aplicação |
 | 💾 **Spring Data JPA / Hibernate** | Mapeamento ORM e abstração de persistência |
-| 🗄️ **H2 Database** | Banco de dados relacional em memória com console web |
+| 🐘 **PostgreSQL 16 (Docker)** | Banco de dados relacional principal em container |
+| 💾 **Rotina de Backup Docker** | Container automatizado com dumps periódicos compactados (.sql.gz) |
+| 🗄️ **H2 Database** | Banco em memória para execução rápida de testes automatizados |
 | 🧪 **JUnit 5 & AssertJ** | Testes automatizados unitários e de integração |
 | 📦 **Maven** | Gerenciador de dependências e automação de build |
 
@@ -169,8 +171,8 @@ Sistema-Bancario-Java/
 
 ### Pré-requisitos
 * **JDK 17** ou superior instalado e configurado no `PATH`.
-* **Maven** instalado (ou Maven wrapper da sua IDE).
-* IDE de sua preferência (IntelliJ IDEA, Eclipse, VS Code).
+* **Maven** instalado.
+* **Docker e Docker Compose** instalados (ex: Docker Desktop).
 
 ### 1. Clonar o repositório
 ```bash
@@ -178,12 +180,22 @@ git clone https://github.com/PedrorCastro/Sistema-Bancario-Java.git
 cd Sistema-Bancario-Java
 ```
 
-### 2. Compilar e executar os testes
+### 2. Subir o Banco de Dados PostgreSQL e o Backup via Docker
+Execute o Docker Compose na raiz do projeto:
+```bash
+docker compose up -d
+```
+Isso iniciará:
+1. **`bancodb-postgres`**: PostgreSQL 16 na porta `5432` com volume persistente local.
+2. **`bancodb-backup`**: Container automático que gera dumps compactados (`.sql.gz`) na pasta `./backups` da sua máquina.
+
+### 3. Compilar e executar os testes
+Os testes rodam isoladamente em memória via perfil de teste (H2), garantindo velocidade sem depender do banco:
 ```bash
 mvn clean test
 ```
 
-### 3. Executar a aplicação
+### 4. Executar a aplicação
 Pela linha de comando via Maven:
 ```bash
 mvn spring-boot:run
@@ -193,12 +205,27 @@ Ou executando a classe principal pela sua IDE:
 src/main/java/org/pedro/SistemaBancarioApplication.java
 ```
 
-### 4. Acessar o Console H2 (opcional)
-Se a aplicação estiver em execução com web habilitado:
-* **URL**: `http://localhost:8080/h2-console`
-* **JDBC URL**: `jdbc:h2:mem:bancodb`
-* **Usuário**: `sa`
-* **Senha**: *(em branco)*
+---
+
+## 💾 Gerenciamento de Backups Locais (Docker)
+
+Além dos backups automáticos diários em `./backups`, você pode disparar comandos manuais a qualquer momento:
+
+* **Gerar backup manual imediato:**
+  ```bash
+  docker exec -t bancodb-postgres pg_dump -U postgres -d bancodb > ./backups/backup_manual.sql
+  ```
+
+* **Restaurar um backup:**
+  ```powershell
+  # No PowerShell do Windows:
+  Get-Content ./backups/backup_manual.sql | docker exec -i bancodb-postgres psql -U postgres -d bancodb
+  ```
+
+* **Parar os containers sem perder os dados:**
+  ```bash
+  docker compose down
+  ```
 
 ---
 
@@ -224,12 +251,12 @@ Abaixo está o registro detalhado das correções arquiteturais e de código imp
 
 ## 🔮 Próximas Evoluções
 
-- [x] Persistência em banco de dados relacional (H2 Database)
+- [x] Persistência em banco de dados relacional (PostgreSQL + H2 para testes)
 - [x] Integração completa com Spring Data JPA
 - [x] Transferência bancária atômica entre contas
 - [x] Testes unitários e de integração (JUnit 5 + Spring Boot Test)
+- [x] Integração com PostgreSQL via Docker e rotina de backup local
 - [ ] API REST com controladores (`@RestController`) e DTOs
-- [ ] Integração com PostgreSQL ou MySQL em container Docker
 - [ ] Documentação interativa da API com OpenAPI / Swagger
 - [ ] Validação formal de dígitos de CPF (algoritmo receita federal)
 - [ ] Autenticação e autorização via JWT / Spring Security

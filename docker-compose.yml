@@ -1,0 +1,45 @@
+services:
+  # Servico principal: Banco de Dados PostgreSQL 16
+  postgres:
+    image: postgres:16-alpine
+    container_name: bancodb-postgres
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: bancodb
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres -d bancodb"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  # Servico de Backup Automatico Local
+  # Gera dumps compactados (.sql.gz) na pasta ./backups do seu projeto
+  postgres-backup:
+    image: prodrigestivill/postgres-backup-local:16-alpine
+    container_name: bancodb-backup
+    restart: unless-stopped
+    depends_on:
+      postgres:
+        condition: service_healthy
+    environment:
+      POSTGRES_HOST: postgres
+      POSTGRES_DB: bancodb
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+      SCHEDULE: "@daily" # Executa diariamente (pode ser ajustado para cron ex: "*/30 * * * *" para cada 30 min)
+      BACKUP_KEEP_DAYS: 7
+      BACKUP_KEEP_WEEKS: 4
+      BACKUP_KEEP_MONTHS: 6
+      BACKUP_DIR: /backups
+    volumes:
+      - ./backups:/backups
+
+volumes:
+  postgres_data:
+    driver: local
