@@ -1,7 +1,14 @@
-package org.pedro;
+package org.pedro.controller;
 
 import org.springframework.boot.CommandLineRunner;
 import org.springframework.stereotype.Component;
+import org.pedro.exception.SaldoInsuficienteException;
+import org.pedro.exception.ValorInvalidoException;
+import org.pedro.model.Cliente;
+import org.pedro.model.Conta;
+import org.pedro.model.ContaCorrente;
+import org.pedro.model.ContaPoupanca;
+import org.pedro.model.Transacao;
 
 import java.util.Scanner;
 
@@ -35,7 +42,7 @@ public class MenuConsole implements CommandLineRunner {
             case "2":
             contaCriada = new ContaPoupanca(2, p);
             break;
-            case null, default:
+            default:
                 throw new Exception("Erro: " + c);
         }
 
@@ -52,7 +59,7 @@ public class MenuConsole implements CommandLineRunner {
             switch (op) {
                 case "1":
                     System.out.println("Digite o valor a ser depositado: ");
-                    double valor = sc.nextDouble();
+                    Long valor = sc.nextLong();
                     sc.nextLine();
                     try {
                         contaCriada.depositar(valor);
@@ -62,7 +69,7 @@ public class MenuConsole implements CommandLineRunner {
                     break;
                 case "2":
                     System.out.println("Digite o valor a ser sacado: ");
-                    double valor2 = sc.nextDouble();
+                    Long valor2 = sc.nextLong();
                     sc.nextLine();
                     try {
                         contaCriada.sacar(valor2);
@@ -81,7 +88,7 @@ public class MenuConsole implements CommandLineRunner {
                 case "0":
                     System.exit(0);
                     break;
-                case null, default:
+                default:
                     throw new IllegalArgumentException("Tipo de transação inválido: " + op);
             }
         }

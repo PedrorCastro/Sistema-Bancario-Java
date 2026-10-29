@@ -1,14 +1,29 @@
-package org.pedro;
+package org.pedro.model;
 
 import java.util.ArrayList;
 import java.util.List;
+import org.pedro.exception.SaldoInsuficienteException;
+import org.pedro.exception.ValorInvalidoException;
 
+import jakarta.persistence.Entity;
+import jakarta.persistence.GeneratedValue;
+import jakarta.persistence.Id;
+import jakarta.persistence.ManyToOne;
+
+@Entity 
 public abstract class Conta {
 
     private Integer numero;
     private Cliente titular;
-    private double saldo = 0;
+    private Long saldo = Long.valueOf(0);
     private List<Transacao> historico = new ArrayList<>();
+
+    @Id 
+    @GeneratedValue 
+    private Long id;
+
+    @ManyToOne 
+    private Cliente cliente;
 
     //Construtor
     public Conta(Integer numero, Cliente titular) {
@@ -35,11 +50,11 @@ public abstract class Conta {
         this.titular = titular;
     }
 
-    public double getSaldo() {
+    public Long getSaldo() {
         return saldo;
     }
 
-    protected void setSaldo(double saldo) {
+    protected void setSaldo(Long saldo) {
         this.saldo = saldo;
     }
 
@@ -53,9 +68,9 @@ public abstract class Conta {
 
 
 
-    public abstract void sacar(double valor) throws SaldoInsuficienteException, ValorInvalidoException;
+    public abstract void sacar(Long valor) throws SaldoInsuficienteException, ValorInvalidoException;
 
-    public void depositar(double valor) throws ValorInvalidoException {
+    public void depositar(Long valor) throws ValorInvalidoException {
         validarValor(valor);
         this.saldo += valor;
         Transacao transacao = new Transacao(valor, TipoTransacao.DEPOSITO);
@@ -64,7 +79,7 @@ public abstract class Conta {
         System.out.println("Saldo atual de: " +  this.getSaldo());
     }
 
-    protected void validarValor(double valor) throws ValorInvalidoException{
+    protected void validarValor(Long valor) throws ValorInvalidoException{
         if(valor > 0){
             System.out.println("Transação valida");
         }else {

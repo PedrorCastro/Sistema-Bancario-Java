@@ -1,14 +1,21 @@
-package org.pedro;
+package org.pedro.model;
 
 import java.util.ArrayList;
 import java.util.List;
 
+import jakarta.persistence.Entity;
+import jakarta.persistence.OneToMany;
+
+@Entity 
 public class Cliente {
 
     private String nome;
     private String cpf;
     private String email;
-    private List<Conta> contas = new ArrayList<>();
+    private List<Conta> conta = new ArrayList<>();
+
+    @OneToMany(mappedBy = "cliente")
+    private List<Conta> contas;
 
     //Contrutor
     public Cliente(String nome, String cpf, String email) {
@@ -48,12 +55,12 @@ public class Cliente {
         return contas;
     }
 
-    private void setContas(List<Conta> contas) {
-        this.contas = contas;
+    private void setConta(List<Conta> contas) {
+        this.conta = conta;
     }
 
     public void adicionarConta(Conta conta){
-        this.contas.add(conta);
+        this.conta.add(conta);
     }
     public void depositar(Conta conta){
 

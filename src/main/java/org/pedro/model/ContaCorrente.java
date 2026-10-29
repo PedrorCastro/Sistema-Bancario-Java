@@ -1,4 +1,8 @@
-package org.pedro;
+package org.pedro.model;
+import org.pedro.exception.SaldoInsuficienteException;
+import org.pedro.exception.ValorInvalidoException;
+
+
 
 public class ContaCorrente extends Conta{
     private double limite;
@@ -14,7 +18,7 @@ public class ContaCorrente extends Conta{
     }
 
     @Override
-    public void sacar(double valor) throws SaldoInsuficienteException, ValorInvalidoException {
+    public void sacar(Long valor) throws SaldoInsuficienteException, ValorInvalidoException {
         validarValor(valor);
         double saldoDisponivel = this.getSaldo() + this.getLimite();
 

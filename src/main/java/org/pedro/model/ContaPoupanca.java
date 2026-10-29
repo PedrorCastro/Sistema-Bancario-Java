@@ -1,4 +1,8 @@
-package org.pedro;
+package org.pedro.model;
+
+import org.pedro.exception.SaldoInsuficienteException;
+import org.pedro.exception.ValorInvalidoException;
+
 
 public class ContaPoupanca extends Conta{
     public ContaPoupanca(Integer numero, Cliente titular) {
@@ -6,7 +10,7 @@ public class ContaPoupanca extends Conta{
     }
 
     @Override
-    public void sacar(double valor) throws SaldoInsuficienteException, ValorInvalidoException {
+    public void sacar(Long valor) throws SaldoInsuficienteException, ValorInvalidoException {
 
 
         validarValor(valor);
