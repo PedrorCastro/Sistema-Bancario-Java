@@ -8,15 +8,7 @@ import org.pedro.model.Conta;
 import org.pedro.repository.ContaRepository;
 import org.springframework.stereotype.Service;
 
-/**
- * [ALTERADO]
- * Mudanças:
- * 1. Injeção de dependência via construtor com 'final'.
- * 2. Métodos buscarPorId, buscarPorNumero e listarPorCliente corrigidos de 'void' para retornar
- *    Optional<Conta> e List<Conta> (anteriormente descartavam os retornos).
- * 3. Nomenclatura ajustada para camelCase.
- * 4. Adicionados retornos úteis nos métodos de criação e consulta.
- */
+
 @Service 
 public class ContaService {
 

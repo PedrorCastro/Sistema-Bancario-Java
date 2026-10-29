@@ -156,9 +156,7 @@ public class MenuConsole implements CommandLineRunner {
         }
     }
 
-    /**
-     * Fluxo de Cadastro: Reconhece se o cliente já existe para não duplicar dados pessoais.
-     */
+
     private Conta cadastrarNovaConta(Scanner sc) {
         System.out.println("\n--- ABERTURA DE CONTA BANCÁRIA ---");
         System.out.print("Digite o seu CPF: ");

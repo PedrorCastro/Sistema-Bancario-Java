@@ -13,19 +13,7 @@ import org.pedro.repository.TransacaoRepository;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-/**
- * [ALTERADO]
- * Mudanças:
- * 1. Injeção de dependências via construtor com campos final.
- * 2. Uso de org.springframework.transaction.annotation.Transactional para controle de transações.
- * 3. Eliminação da duplicidade de transações: a entidade Conta já gera a transação e ela é
- *    automaticamente persistida em cascata pelo save da conta.
- * 4. Transferência corrigida:
- *    - Validação impedindo transferência para a mesma conta.
- *    - Mensagem de erro corrigida para a conta de destino.
- *    - Registro de TipoTransacao.TRANSFERENCIA associado corretamente às contas de origem e destino.
- * 5. Validação de intervalo de datas (dataInicio não pode ser posterior a dataFim) em gerarExtrato.
- */
+
 @Service 
 public class TransacaoService {
 

@@ -7,14 +7,7 @@ import org.pedro.model.Cliente;
 import org.pedro.repository.ClienteRepository;
 import org.springframework.stereotype.Service;
 
-/**
- * [ALTERADO]
- * Mudanças:
- * 1. Injeção de dependência via construtor (removido @Autowired em campo e ContaRepository não utilizado).
- * 2. Método 'buscarPorCpf' corrigido de 'void' para retornar 'Optional<Cliente>' (anteriormente descartava o resultado).
- * 3. Nomes de métodos e variáveis alinhados ao padrão camelCase do Java (buscarPorId, buscarPorCpf, id em minúsculo).
- * 4. Adicionadas validações de entrada para evitar NullPointerException.
- */
+
 @Service 
 public class ClienteService {
 

@@ -8,12 +8,7 @@ import org.pedro.exception.ValorInvalidoException;
 
 import static org.junit.jupiter.api.Assertions.*;
 
-/**
- * [ALTERADO]
- * Mudanças:
- * 1. Declarado pacote 'org.pedro.model'.
- * 2. Adicionados testes de depósito com sucesso, saque com saldo suficiente e saque sem saldo.
- */
+
 public class ContaPoupancaTest {
 
     private Cliente cliente;

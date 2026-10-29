@@ -8,13 +8,7 @@ import org.pedro.exception.ValorInvalidoException;
 
 import static org.junit.jupiter.api.Assertions.*;
 
-/**
- * [ALTERADO]
- * Mudanças:
- * 1. Declarado pacote 'org.pedro.model' (antes estava no unnamed/default package).
- * 2. Corrigida a asserção da mensagem da exceção para o texto revisado em português correto.
- * 3. Adicionados testes completos de caminho feliz (depósito, saque com saldo, saque com limite e estouro de limite).
- */
+
 public class ContaCorrenteTest {
 
     private Cliente cliente;
