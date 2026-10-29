@@ -1,75 +1,109 @@
 package org.pedro.service;
 
-import jakarta.transaction.Transactional;
-import org.pedro.exception.SaldoInsuficienteException;
-import org.pedro.exception.ValorInvalidoException;
-import org.pedro.model.Conta;
-import org.pedro.repository.ContaRepository;
-import org.pedro.repository.TransacaoRepository;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.stereotype.Service;
-import org.pedro.model.Transacao;
-
 import java.time.LocalDateTime;
 import java.util.List;
 
+import org.pedro.exception.SaldoInsuficienteException;
+import org.pedro.exception.ValorInvalidoException;
+import org.pedro.model.Conta;
 import org.pedro.model.TipoTransacao;
+import org.pedro.model.Transacao;
+import org.pedro.repository.ContaRepository;
+import org.pedro.repository.TransacaoRepository;
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
+/**
+ * [ALTERADO]
+ * Mudanças:
+ * 1. Injeção de dependências via construtor com campos final.
+ * 2. Uso de org.springframework.transaction.annotation.Transactional para controle de transações.
+ * 3. Eliminação da duplicidade de transações: a entidade Conta já gera a transação e ela é
+ *    automaticamente persistida em cascata pelo save da conta.
+ * 4. Transferência corrigida:
+ *    - Validação impedindo transferência para a mesma conta.
+ *    - Mensagem de erro corrigida para a conta de destino.
+ *    - Registro de TipoTransacao.TRANSFERENCIA associado corretamente às contas de origem e destino.
+ * 5. Validação de intervalo de datas (dataInicio não pode ser posterior a dataFim) em gerarExtrato.
+ */
 @Service 
 public class TransacaoService {
-    @Autowired 
-    private TransacaoRepository transacaoRepository;
-    @Autowired 
-    private ContaRepository contaRepository;
+
+    private final TransacaoRepository transacaoRepository;
+    private final ContaRepository contaRepository;
+
+    public TransacaoService(TransacaoRepository transacaoRepository, ContaRepository contaRepository) {
+        this.transacaoRepository = transacaoRepository;
+        this.contaRepository = contaRepository;
+    }
 
     @Transactional
-    public void depositar (Long contaId, Long valor){
+    public void depositar(Long contaId, Long valor) {
         if (contaId == null || valor == null) {
             throw new IllegalArgumentException("ContaId e valor não podem ser nulos");
-        } else {
-            Conta conta = contaRepository.findById(contaId).orElseThrow(() -> new IllegalArgumentException("Conta não encontrada com o ID: " + contaId));
-
-            conta.depositar(valor);
-
-            contaRepository.save(conta);
-            transacaoRepository.save(new Transacao(valor, TipoTransacao.DEPOSITO));
         }
+        Conta conta = contaRepository.findById(contaId)
+                .orElseThrow(() -> new IllegalArgumentException("Conta não encontrada com o ID: " + contaId));
+
+        conta.depositar(valor);
+        contaRepository.save(conta);
     }
+
     @Transactional
-    public void sacar (Long contaId, Long valor) throws SaldoInsuficienteException, ValorInvalidoException {
+    public void sacar(Long contaId, Long valor) throws SaldoInsuficienteException, ValorInvalidoException {
         if (contaId == null || valor == null) {
             throw new IllegalArgumentException("ContaId e valor não podem ser nulos");
-        } else {
-            Conta conta = contaRepository.findById(contaId).orElseThrow(() -> new IllegalArgumentException("Conta não encontrada com o ID: " + contaId));
-
-            conta.sacar(valor);
-
-            contaRepository.save(conta);
-            transacaoRepository.save(new Transacao(valor, TipoTransacao.SAQUE));
         }
+        Conta conta = contaRepository.findById(contaId)
+                .orElseThrow(() -> new IllegalArgumentException("Conta não encontrada com o ID: " + contaId));
+
+        conta.sacar(valor);
+        contaRepository.save(conta);
     }
+
     @Transactional
-    public void transferir (Long contaIdOrigem, Long contaIdDestino, Long valor) throws SaldoInsuficienteException, ValorInvalidoException {
-        if(contaIdOrigem == null || contaIdDestino == null || valor == null){
+    public void transferir(Long contaIdOrigem, Long contaIdDestino, Long valor)
+            throws SaldoInsuficienteException, ValorInvalidoException {
+        if (contaIdOrigem == null || contaIdDestino == null || valor == null) {
             throw new IllegalArgumentException("ContaIdOrigem, ContaIdDestino e valor não podem ser nulos");
-        } else {
-            Conta contaOrigem = contaRepository.findById(contaIdOrigem).orElseThrow(() -> new IllegalArgumentException("Conta de origem não encontrada"));
-            Conta contaDestino = contaRepository.findById(contaIdDestino).orElseThrow(() -> new IllegalArgumentException("Conta de origem não encontrada"));
-
-            contaOrigem.sacar(valor);
-            contaDestino.depositar(valor);
-
-
-            transacaoRepository.save(new Transacao(valor, TipoTransacao.TRANSFERENCIA));
         }
+        if (contaIdOrigem.equals(contaIdDestino)) {
+            throw new IllegalArgumentException("A conta de origem e a conta de destino não podem ser a mesma");
+        }
+
+        Conta contaOrigem = contaRepository.findById(contaIdOrigem)
+                .orElseThrow(() -> new IllegalArgumentException("Conta de origem não encontrada com ID: " + contaIdOrigem));
+        Conta contaDestino = contaRepository.findById(contaIdDestino)
+                .orElseThrow(() -> new IllegalArgumentException("Conta de destino não encontrada com ID: " + contaIdDestino));
+
+        // Executa o débito com validação de saldo/limite
+        contaOrigem.sacar(valor);
+        // Atualiza a transação gerada para o tipo TRANSFERENCIA
+        if (!contaOrigem.getHistorico().isEmpty()) {
+            contaOrigem.getHistorico().get(contaOrigem.getHistorico().size() - 1).setTipo(TipoTransacao.TRANSFERENCIA);
+        }
+
+        // Executa o crédito
+        contaDestino.depositar(valor);
+        // Atualiza a transação gerada para o tipo TRANSFERENCIA
+        if (!contaDestino.getHistorico().isEmpty()) {
+            contaDestino.getHistorico().get(contaDestino.getHistorico().size() - 1).setTipo(TipoTransacao.TRANSFERENCIA);
+        }
+
+        contaRepository.save(contaOrigem);
+        contaRepository.save(contaDestino);
     }
 
-    public List<Transacao> gerarExtrato(Long contaId, LocalDateTime dataInicio, LocalDateTime dataFim){
-        if(contaId == null || dataInicio == null || dataFim == null){
+    @Transactional(readOnly = true)
+    public List<Transacao> gerarExtrato(Long contaId, LocalDateTime dataInicio, LocalDateTime dataFim) {
+        if (contaId == null || dataInicio == null || dataFim == null) {
             throw new IllegalArgumentException("ContaId, dataInicio e dataFim não podem ser nulos");
-        } if (!contaRepository.existsById(contaId)) {
+        }
+        if (dataInicio.isAfter(dataFim)) {
+            throw new IllegalArgumentException("Data de início não pode ser posterior à data de fim");
+        }
+        if (!contaRepository.existsById(contaId)) {
             throw new IllegalArgumentException("Conta não encontrada com o ID: " + contaId);
-
         }
         return transacaoRepository.findByContaIdAndDataBetween(contaId, dataInicio, dataFim);
     }

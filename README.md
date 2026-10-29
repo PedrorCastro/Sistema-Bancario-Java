@@ -1,174 +1,108 @@
 # 🏦 Sistema Bancário em Java
 
-Sistema bancário desenvolvido em **Java** com foco na aplicação prática dos principais conceitos de **Programação Orientada a Objetos (POO)**.
+Sistema bancário desenvolvido em **Java** com **Spring Boot**, demonstrando a aplicação prática dos principais conceitos de **Programação Orientada a Objetos (POO)** e a transição para uma arquitetura profissional em camadas com persistência em banco de dados relacional via **Spring Data JPA**.
 
-A aplicação simula operações bancárias básicas por meio de uma interface de linha de comando (CLI), permitindo criar um cliente, escolher o tipo de conta, realizar depósitos, saques e consultar o histórico de transações.
+A aplicação simula operações bancárias por meio de uma interface de linha de comando (CLI) interativa e resiliente, permitindo cadastrar clientes, abrir contas (Corrente ou Poupança), realizar depósitos, saques, transferências entre contas e consultar extratos com histórico completo de transações persistidas.
+
+---
 
 ## 📌 Sobre o Projeto
 
-O projeto foi desenvolvido com o objetivo de praticar conceitos fundamentais do desenvolvimento backend com Java, incluindo:
+O projeto foi desenvolvido para consolidar conceitos essenciais do ecossistema backend Java moderno:
 
-* Programação Orientada a Objetos
-* Abstração
-* Herança
-* Encapsulamento
-* Polimorfismo
-* Classes abstratas
-* Enumerações
-* Tratamento de exceções
-* Coleções com `List`
-* Registro de transações
-* Manipulação de datas com `LocalDateTime`
-* Gerenciamento de dependências e build com Maven
-
-A estrutura utiliza uma classe abstrata `Conta` como base para diferentes tipos de contas, como **Conta Corrente** e **Conta Poupança**.
+* **Programação Orientada a Objetos (POO)**: Abstração, Herança, Encapsulamento e Polimorfismo.
+* **Arquitetura em Camadas**: Separação clara de responsabilidades entre Modelo (`model`), Repositório (`repository`), Serviço (`service`), Controle/CLI (`controller`) e Exceções (`exception`).
+* **Princípios SOLID**: Em especial, Responsabilidade Única (SRP) e Inversão de Controle/Injeção de Dependências.
+* **Spring Boot & Spring Data JPA**: Mapeamento Objeto-Relacional (ORM) com Hibernate, persistência transacional com `@Transactional` e repositórios baseados em interfaces.
+* **Banco de Dados Relacional H2**: Banco de dados relacional em memória com console web para inspeção rápida.
+* **Tratamento Robusto de Exceções**: Exceções de domínio personalizadas (`RuntimeException`) e interface de terminal resiliente a falhas de digitação.
+* **Testes Automatizados**: Suíte de testes unitários com JUnit 5 e testes de integração com Spring Test (`@SpringBootTest`).
+* **Gerenciamento de Build**: Maven padronizado em **Java 17 LTS**.
 
 ---
 
 ## ⚙️ Funcionalidades
 
-### 👤 Cadastro de cliente
+### 👤 Cadastro e Consulta de Cliente
+* Solicita nome, CPF e e-mail.
+* Persiste o cliente no banco de dados e impede duplicidade de CPF.
+* O cliente mantém relação bidirecional com suas contas bancárias (`@OneToMany`).
 
-Durante a execução, o sistema solicita:
+### 🏦 Tipos de Conta
+A estrutura utiliza uma classe abstrata `Conta` com herança JPA (`@Inheritance(strategy = InheritanceType.JOINED)`):
 
-* Nome
-* CPF
-* E-mail
+#### Conta Corrente (`ContaCorrente`)
+* Possui um limite de crédito configurável (ex: R$ 5.000).
+* O valor disponível para saque considera:
+  $$\text{Saldo Disponível} = \text{Saldo Atual} + \text{Limite}$$
+* Permite saldo negativo controlado até o limite contratado.
 
-Os dados são armazenados em um objeto `Cliente`, que também mantém a relação com suas contas bancárias.
-
-### 🏦 Tipos de conta
-
-O sistema atualmente possui dois tipos:
-
-#### Conta Corrente
-
-Possui um limite de crédito configurável para operações de saque.
-
-O valor disponível para saque considera:
-
-```text
-Saldo atual + Limite da conta
-```
-
-#### Conta Poupança
-
-Permite saques somente quando o cliente possui saldo suficiente na conta.
+#### Conta Poupança (`ContaPoupanca`)
+* Não possui limite de crédito.
+* Permite saques apenas quando há saldo próprio suficiente na conta.
 
 ---
 
-### 💰 Depósito
+### 💰 Operações Financeiras
 
-Permite adicionar valores ao saldo da conta.
+1. **Depósito**:
+   * Valida para impedir valores menores ou iguais a zero ou nulos.
+   * Credita o saldo e registra uma transação do tipo `DEPOSITO` no histórico e no banco de dados.
 
-O sistema realiza uma validação para impedir transações com valores menores ou iguais a zero. Cada depósito aprovado é registrado no histórico da conta.
+2. **Saque**:
+   * Valida as regras de negócio de cada conta polimorficamente.
+   * Trata situações de saldo insuficiente (`SaldoInsuficienteException`) e valores inválidos (`ValorInvalidoException`).
+   * Debita o saldo e registra uma transação do tipo `SAQUE`.
 
-### 💸 Saque
+3. **Transferência**:
+   * Operação atômica (`@Transactional`): debita da conta de origem e credita na conta de destino.
+   * Valida se as contas existem e impede transferências para a mesma conta.
+   * Registra transações do tipo `TRANSFERENCIA` nas duas contas participantes.
 
-Permite retirar valores da conta respeitando as regras específicas de cada tipo de conta.
-
-O sistema possui tratamento para:
-
-* Valor inválido
-* Saldo insuficiente
-
-### 📄 Extrato
-
-Todas as operações realizadas são armazenadas no histórico da conta.
-
-Cada transação possui:
-
-* Valor
-* Tipo da operação
-* Data e hora
-
-Atualmente são suportados os tipos:
-
-```text
-DEPOSITO
-SAQUE
-```
+4. **Extrato**:
+   * Consulta o histórico persistido das operações realizadas pela conta filtrado por intervalo de datas.
+   * Exibe tipo da operação, valor e timestamp (`LocalDateTime`).
 
 ---
 
-## 🧠 Conceitos de POO Aplicados
+## 🧠 Conceitos de POO e Arquitetura
 
-### Abstração
-
-A classe `Conta` é definida como uma classe abstrata e concentra atributos e comportamentos comuns às diferentes contas bancárias.
-
+### Abstração e Herança
+A classe base `Conta` define a estrutura fundamental e o comportamento comum:
 ```java
+@Entity
+@Table(name = "tb_contas")
+@Inheritance(strategy = InheritanceType.JOINED)
 public abstract class Conta {
     ...
-    public abstract void sacar(double valor);
+    public abstract void sacar(Long valor) throws SaldoInsuficienteException, ValorInvalidoException;
 }
 ```
+As classes filhas `ContaCorrente` e `ContaPoupanca` reutilizam essa base e especializam as regras de saque.
 
-### Herança
+### Polimorfismo
+O método `sacar()` possui comportamentos distintos dependendo do tipo da conta em tempo de execução:
+```java
+// ContaCorrente considera saldo + limite
+long saldoDisponivel = this.getSaldo() + this.limite;
 
-As classes específicas reutilizam a estrutura da classe `Conta`:
-
-```text
-              Conta
-                │
-        ┌───────┴────────┐
-        │                │
-ContaCorrente      ContaPoupanca
+// ContaPoupanca considera estritamente o saldo em conta
+if (valor <= this.getSaldo()) { ... }
 ```
 
 ### Encapsulamento
-
-Os atributos das entidades são privados e acessados por métodos, mantendo o controle sobre o estado dos objetos.
-
-Exemplo:
-
-```java
-private double saldo;
-
-public double getSaldo() {
-    return saldo;
-}
-```
-
-A alteração do saldo é controlada pela própria classe `Conta` e por suas subclasses.
-
-### Polimorfismo
-
-O método `sacar()` é definido na classe abstrata `Conta` e implementado de maneira diferente em cada tipo de conta.
-
-```java
-@Override
-public void sacar(double valor) {
-    ...
-}
-```
-
-Isso permite que diferentes contas possuam regras específicas para a mesma operação.
+Atributos protegidos por modificadores privados/protegidos, expondo apenas operações seguras por métodos e protegendo o estado financeiro da conta contra modificações externas indevidas.
 
 ---
 
 ## 🛡️ Tratamento de Exceções
 
-O projeto utiliza exceções específicas para representar situações inválidas durante as operações bancárias.
+As regras de negócio lançam exceções de domínio padronizadas estendendo `RuntimeException`:
 
-Entre os cenários tratados estão:
+* `SaldoInsuficienteException`: Lançada quando a operação excede o saldo ou saldo + limite.
+* `ValorInvalidoException`: Lançada ao informar valores nulos, negativos ou zero.
 
-* Saldo insuficiente
-* Valor de transação inválido
-
-Exemplo de utilização:
-
-```java
-try {
-    contaCriada.sacar(valor);
-} catch (SaldoInsuficienteException e) {
-    System.out.println("Erro: " + e.getMessage());
-} catch (ValorInvalidoException e) {
-    System.out.println("Erro: " + e.getMessage());
-}
-```
-
-Essa abordagem evita que erros durante uma operação encerrem a aplicação de maneira inesperada.
+Ao estenderem `RuntimeException`, integram-se perfeitamente com a anotação `@Transactional` do Spring, garantindo o **rollback automático** caso ocorra qualquer inconsistência durante uma transação bancária.
 
 ---
 
@@ -176,222 +110,134 @@ Essa abordagem evita que erros durante uma operação encerrem a aplicação de 
 
 ```text
 Sistema-Bancario-Java/
-│
-├── .idea/
-│
 ├── src/
-│   └── main/
+│   ├── main/
+│   │   ├── java/
+│   │   │   └── org/pedro/
+│   │   │       ├── SistemaBancarioApplication.java   # Ponto de entrada Spring Boot
+│   │   │       ├── controller/
+│   │   │       │   └── MenuConsole.java               # CLI interativa (CommandLineRunner)
+│   │   │       ├── exception/
+│   │   │       │   ├── SaldoInsuficienteException.java
+│   │   │       │   └── ValorInvalidoException.java
+│   │   │       ├── model/
+│   │   │       │   ├── Cliente.java                   # Entidade JPA
+│   │   │       │   ├── Conta.java                     # Entidade base JPA
+│   │   │       │   ├── ContaCorrente.java             # Subclasse JPA
+│   │   │       │   ├── ContaPoupanca.java             # Subclasse JPA
+│   │   │       │   ├── TipoTransacao.java             # Enum (DEPOSITO, SAQUE, TRANSFERENCIA)
+│   │   │       │   └── Transacao.java                 # Entidade JPA
+│   │   │       ├── repository/
+│   │   │       │   ├── ClienteRepository.java         # Spring Data JPA
+│   │   │       │   ├── ContaRepository.java           # Spring Data JPA
+│   │   │       │   └── TransacaoRepository.java       # Spring Data JPA
+│   │   │       └── service/
+│   │   │           ├── ClienteService.java            # Regras e transações de Cliente
+│   │   │           ├── ContaService.java              # Regras e transações de Conta
+│   │   │           └── TransacaoService.java          # Depósito, saque, transferência, extrato
+│   │   └── resources/
+│   │       └── application.properties                 # Configurações do H2 e JPA
+│   └── test/
 │       └── java/
-│           └── org/
-│               └── pedro/
-│                   ├── Cliente.java
-│                   ├── Conta.java
-│                   ├── ContaCorrente.java
-│                   ├── ContaPoupanca.java
-│                   ├── Transacao.java
-│                   ├── TipoTransacao.java
-│                   ├── SaldoInsuficienteException.java
-│                   └── ValorInvalidoException.java
-│
-├── .gitignore
+│           ├── ContaCorrenteTest.java                 # Teste unitário
+│           ├── ContaPoupancaTest.java                 # Teste unitário
+│           └── org/pedro/
+│               ├── SistemaBancarioApplicationTests.java # Teste de integração Spring Boot
+│               └── model/
+│                   ├── ContaCorrenteTest.java         # Testes de unidade expandidos
+│                   └── ContaPoupancaTest.java         # Testes de unidade expandidos
 ├── pom.xml
 └── README.md
 ```
-
-O repositório utiliza Maven e atualmente possui `pom.xml` configurado para compilação com **Java 25**.
 
 ---
 
 ## 🛠️ Tecnologias
 
-| Tecnologia          | Utilização                             |
-| ------------------- | -------------------------------------- |
-| ☕ Java 25           | Desenvolvimento da aplicação           |
-| 📦 Maven            | Gerenciamento e build do projeto       |
-| 🧩 POO              | Modelagem das entidades e regras       |
-| 📝 Java Collections | Armazenamento de contas e transações   |
-| 🕐 LocalDateTime    | Registro de data e hora das transações |
-| 💻 CLI              | Interface de interação com o usuário   |
+| Tecnologia | Finalidade |
+|---|---|
+| ☕ **Java 17 LTS** | Linguagem principal do projeto |
+| 🍃 **Spring Boot 4 / 3** | Framework base da aplicação |
+| 💾 **Spring Data JPA / Hibernate** | Mapeamento ORM e abstração de persistência |
+| 🗄️ **H2 Database** | Banco de dados relacional em memória com console web |
+| 🧪 **JUnit 5 & AssertJ** | Testes automatizados unitários e de integração |
+| 📦 **Maven** | Gerenciador de dependências e automação de build |
 
 ---
 
 ## 🚀 Como Executar
 
 ### Pré-requisitos
+* **JDK 17** ou superior instalado e configurado no `PATH`.
+* **Maven** instalado (ou Maven wrapper da sua IDE).
+* IDE de sua preferência (IntelliJ IDEA, Eclipse, VS Code).
 
-Certifique-se de possuir instalado:
-
-* **JDK 25**
-* **Maven**
-* IDE de sua preferência, como IntelliJ IDEA, Eclipse ou VS Code
-
-### 1. Clone o repositório
-
+### 1. Clonar o repositório
 ```bash
 git clone https://github.com/PedrorCastro/Sistema-Bancario-Java.git
-```
-
-### 2. Entre no diretório
-
-```bash
 cd Sistema-Bancario-Java
 ```
 
-### 3. Compile o projeto
-
+### 2. Compilar e executar os testes
 ```bash
-mvn clean compile
+mvn clean test
 ```
 
-### 4. Execute a aplicação
-
-A aplicação pode ser executada pela sua IDE através da classe:
-
+### 3. Executar a aplicação
+Pela linha de comando via Maven:
+```bash
+mvn spring-boot:run
+```
+Ou executando a classe principal pela sua IDE:
 ```text
-src/main/java/org/pedro/Main.java
+src/main/java/org/pedro/SistemaBancarioApplication.java
 ```
+
+### 4. Acessar o Console H2 (opcional)
+Se a aplicação estiver em execução com web habilitado:
+* **URL**: `http://localhost:8080/h2-console`
+* **JDBC URL**: `jdbc:h2:mem:bancodb`
+* **Usuário**: `sa`
+* **Senha**: *(em branco)*
 
 ---
 
-## 🖥️ Exemplo de Utilização
+## 📝 Histórico de Refatoração e Melhorias Aplicadas
 
-Ao iniciar a aplicação, o usuário informa seus dados:
+Abaixo está o registro detalhado das correções arquiteturais e de código implementadas no projeto:
 
-```text
-Qual o seu nome:
-Pedro
-
-Olá, Pedro!
-
-Qual o seu CPF:
-000.000.000-00
-
-Qual o seu email:
-pedro@email.com
-
-Qual conta você quer criar?
-1. Conta Corrente
-2. Conta Poupanca
-```
-
-Após criar a conta, o sistema apresenta o menu:
-
-```text
-=== SISTEMA BANCARIO ===
-
-Digite uma operação:
-1. Depositar
-2. Sacar
-3. Ver extrato
-0. Sair
-```
-
-### Exemplo de extrato
-
-```text
-Extrato:
-
-Transacao{
-    valor=500.0,
-    tipo=DEPOSITO,
-    data=2026-09-30T12:00:00
-}
-
-Transacao{
-    valor=100.0,
-    tipo=SAQUE,
-    data=2026-09-30T12:05:00
-}
-```
-
----
-
-## 🔄 Fluxo da Aplicação
-
-```text
-                 ┌───────────────┐
-                 │     Início    │
-                 └───────┬───────┘
-                         │
-                         ▼
-                ┌─────────────────┐
-                │ Cadastro Cliente │
-                └────────┬────────┘
-                         │
-                         ▼
-                ┌─────────────────┐
-                │ Escolha da Conta│
-                └────────┬────────┘
-                         │
-              ┌──────────┴──────────┐
-              ▼                     ▼
-      ┌───────────────┐     ┌───────────────┐
-      │ Conta Corrente│     │ Conta Poupança│
-      └───────┬───────┘     └───────┬───────┘
-              │                     │
-              └──────────┬──────────┘
-                         ▼
-                 ┌──────────────┐
-                 │ Menu Bancário│
-                 └──────┬───────┘
-                        │
-             ┌──────────┼──────────┐
-             ▼          ▼          ▼
-         Depositar     Sacar     Extrato
-```
-
----
-
-## 🎯 Objetivos de Aprendizado
-
-Este projeto faz parte do processo de desenvolvimento das minhas habilidades em **Java e Backend**, com foco em transformar conceitos teóricos de orientação a objetos em uma aplicação funcional.
-
-Principais objetivos:
-
-* Praticar modelagem de domínio
-* Aplicar princípios de POO
-* Trabalhar com herança e abstração
-* Implementar regras de negócio
-* Utilizar exceções personalizadas
-* Trabalhar com coleções
-* Registrar operações utilizando objetos de domínio
-* Utilizar Maven em um projeto Java
+| Componente | O que foi alterado | Motivo da mudança |
+|---|---|---|
+| **`Cliente`** | Adicionado `@Id Long id`, construtor no-args, `@Table` e removida lista duplicada `conta` | Exigência da JPA para entidades; corrigiu falha de compilação/inicialização do `ClienteRepository`. |
+| **`Conta`** | Corrigido relacionamento de `historico` para `@OneToMany`, removido `cliente` redundante (mantido `titular`) e adicionado `@Inheritance` | Listas não podem ser `@ManyToOne`; unificação de referências e definição da estratégia de tabelas no banco. |
+| **`ContaCorrente` / `ContaPoupanca`** | Anotadas com `@Entity`, adicionados construtores no-args e construtor com sobrecarga compatível | Permitir persistência polimórfica das subclasses e evitar ambiguidade do compilador Java. |
+| **`Transacao`** | Adicionada anotação `@Enumerated(EnumType.STRING)` e atributo `@ManyToOne Conta conta` | Evita corrupção ordinal de dados no banco e viabiliza as consultas `findByContaId` no repositório. |
+| **`SaldoInsuficienteException`** | Alterada para estender `RuntimeException` | Padronização com `ValorInvalidoException` e garantia de rollback automático em anotações `@Transactional`. |
+| **`ClienteService`** | Métodos `buscarPorCpf` corrigidos para retornar `Optional<Cliente>`, e injeção por construtor | O método anterior era `void` e descartava a consulta; injeção por construtor segue a boa prática do Spring. |
+| **`ContaService`** | Métodos `buscarPorId`, `buscarPorNumero` e `listarPorCliente` corrigidos para retornar dados | Os métodos anteriores eram `void` e não entregavam os objetos consultados ao chamador. |
+| **`TransacaoService`** | Eliminação de transações duplicadas/órfãs, inclusão de validação de mesma conta e suporte a `TRANSFERENCIA` | Manter a integridade contábil do extrato e sincronizar com o banco via cascata JPA. |
+| **`MenuConsole`** | Integrado aos Services, adicionada leitura resiliente no `Scanner`, inclusão de Transferência e `@Profile("!test")` | Persistir de fato os dados no H2 e permitir execução de testes do Spring sem travar esperando entrada do teclado. |
+| **`application.properties`** | Criado arquivo de configuração em `src/main/resources/` com encoding UTF-8 | Habilitação do banco H2 em memória, console web e configuração das tabelas Hibernate. |
+| **Testes Unitários** | Adicionado teste de contexto `@SpringBootTest` e testes completos cobrindo os caminhos felizes de depósito e saque | Garantir que o Spring inicializa com sucesso e aumentar a confiabilidade do código. |
 
 ---
 
 ## 🔮 Próximas Evoluções
 
-Algumas funcionalidades que podem ser adicionadas futuramente:
-
-* [ ] Transferência entre contas
-* [ ] PIX
-* [ ] Autenticação de usuários
-* [ ] Persistência em banco de dados
-* [ ] Integração com MySQL ou PostgreSQL
-* [ ] API REST com Spring Boot
-* [ ] Testes unitários com JUnit
-* [ ] Documentação da API com Swagger/OpenAPI
-* [ ] Validação de CPF e e-mail
-* [ ] Histórico persistente de transações
-* [ ] Containerização com Docker
+- [x] Persistência em banco de dados relacional (H2 Database)
+- [x] Integração completa com Spring Data JPA
+- [x] Transferência bancária atômica entre contas
+- [x] Testes unitários e de integração (JUnit 5 + Spring Boot Test)
+- [ ] API REST com controladores (`@RestController`) e DTOs
+- [ ] Integração com PostgreSQL ou MySQL em container Docker
+- [ ] Documentação interativa da API com OpenAPI / Swagger
+- [ ] Validação formal de dígitos de CPF (algoritmo receita federal)
+- [ ] Autenticação e autorização via JWT / Spring Security
 
 ---
 
 ## 👨‍💻 Autor
 
-**Pedro Rodrigues de Castro Bezerra**
-
-Estudante de Ciência da Computação | Desenvolvedor de Software Júnior
-
-Foco em desenvolvimento **Backend com Java, Spring Boot, APIs REST e bancos de dados relacionais**.
-
-### 🔗 Links
-
+**Pedro Rodrigues de Castro Bezerra**  
+Estudante de Ciência da Computação | Desenvolvedor Backend Java / Spring Boot  
 * GitHub: [PedrorCastro](https://github.com/PedrorCastro)
-* Projeto: [Sistema-Bancario-Java](https://github.com/PedrorCastro/Sistema-Bancario-Java)
-
----
-
-## 📄 Licença
-
-Este projeto foi desenvolvido para fins educacionais e de portfólio.

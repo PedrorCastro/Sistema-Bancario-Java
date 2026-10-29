@@ -14,7 +14,8 @@ public class ContaCorrenteTest {
 
         ValorInvalidoException excecao = assertThrows(ValorInvalidoException.class, () -> {conta.depositar(-100L);});
 
-        assertEquals("Transação invalido", excecao.getMessage());
+        // [ALTERADO] A mensagem da exceção foi corrigida ortograficamente ("Transação inválida")
+        assertTrue(excecao.getMessage().contains("Transação inválida"));
 
     }
 }
