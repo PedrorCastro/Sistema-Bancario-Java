@@ -1,6 +1,8 @@
 import org.junit.jupiter.api.Test;
-import org.pedro.*;
 import static org.junit.jupiter.api.Assertions.*;
+import org.pedro.exception.ValorInvalidoException;
+import org.pedro.model.Cliente;
+import org.pedro.model.ContaCorrente;
 
 public class ContaCorrenteTest {
 
@@ -10,7 +12,7 @@ public class ContaCorrenteTest {
         Cliente cliente = new Cliente("Pedro","123456789-00","teste@teste.com");
         ContaCorrente conta = new ContaCorrente(1, cliente, 5000.00);
 
-        ValorInvalidoException excecao = assertThrows(ValorInvalidoException.class, () -> {conta.depositar(-100.0);});
+        ValorInvalidoException excecao = assertThrows(ValorInvalidoException.class, () -> {conta.depositar(-100L);});
 
         assertEquals("Transação invalido", excecao.getMessage());
 
