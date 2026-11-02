@@ -1,108 +1,151 @@
 # 🏦 Sistema Bancário em Java
 
-Sistema bancário desenvolvido em **Java** com **Spring Boot**, demonstrando a aplicação prática dos principais conceitos de **Programação Orientada a Objetos (POO)** e a transição para uma arquitetura profissional em camadas com persistência em banco de dados relacional via **Spring Data JPA** e exposição de **API REST**.
+Sistema bancário desenvolvido em **Java** com **Spring Boot**, demonstrando a aplicação prática dos principais conceitos de **Programação Orientada a Objetos (POO)** e a evolução para uma arquitetura profissional em camadas.
 
-A aplicação simula operações bancárias por meio de uma interface de linha de comando (CLI) interativa e também conta com controladores REST estruturados, permitindo cadastrar clientes, abrir contas (Corrente ou Poupança), realizar depósitos, saques, transferências entre contas e consultar extratos com histórico completo de transações persistidas.
+O projeto utiliza **Spring Data JPA** para persistência em banco de dados relacional, disponibiliza uma **API REST** estruturada com DTOs e possui configuração de segurança com **Spring Security**.
+
+A aplicação simula operações bancárias por meio de uma interface de linha de comando (CLI) interativa e controladores REST, permitindo cadastrar clientes, abrir contas (Corrente ou Poupança) e gerenciar transações com histórico persistido.
 
 ---
 
 ## 📌 Sobre o Projeto
 
-O projeto foi desenvolvido para consolidar conceitos essenciais do ecossistema backend Java moderno:
+O projeto foi desenvolvido para consolidar conceitos essenciais do ecossistema Backend Java moderno:
 
-- **Programação Orientada a Objetos (POO)**: Abstração, Herança, Encapsulamento e Polimorfismo.
-- **Arquitetura em Camadas**: Separação clara de responsabilidades entre Modelo (`model`), Repositório (`repository`), Serviço (`service`), Controle REST (`controller`), Consoles dedicados (`controller/Console`), DTOs e Exceções (`exception`).
-- **Princípios SOLID**: Em especial, Responsabilidade Única (SRP) e Inversão de Controle/Injeção de Dependências.
-- **Spring Boot & Spring Data JPA**: Mapeamento Objeto-Relacional (ORM) com Hibernate, persistência transacional com `@Transactional` e repositórios baseados em interfaces.
-- **Banco de Dados Relacional H2 & PostgreSQL**: Suporte a banco em memória para testes rápidos e PostgreSQL em container Docker para persistência robusta.
-- **Tratamento Robusto de Exceções**: Exceções de domínio personalizadas (`RuntimeException`) e fluxo de terminal/API resiliente.
-- **Testes Automatizados**: Suíte de testes unitários com JUnit 5 e testes de integração com Spring Test (`@SpringBootTest`).
-- **Gerenciamento de Build**: Maven padronizado em **Java 17 LTS**.
+- **Programação Orientada a Objetos (POO):** Abstração, Herança, Encapsulamento e Polimorfismo.
+- **Arquitetura em Camadas:** Separação de responsabilidades entre Modelo (`model`), Repositório (`repository`), Serviço (`service`), Controladores REST (`controller`), Console (`controller/Console`), DTOs e Exceções (`exception`).
+- **Princípios SOLID:** Aplicação do princípio da Responsabilidade Única (SRP), Inversão de Controle (IoC) e Injeção de Dependências.
+- **Spring Boot & Spring Data JPA:** Mapeamento Objeto-Relacional (ORM) com Hibernate, persistência transacional com `@Transactional` e repositórios baseados em interfaces.
+- **Banco de Dados Relacional H2 & PostgreSQL:** Utilização do H2 em memória para testes e PostgreSQL em container Docker para persistência.
+- **Padronização com DTOs (Data Transfer Objects):** Separação entre entidades de banco de dados e objetos de transferência, evitando referências circulares e serializações recursivas indesejadas do Jackson.
+- **Tratamento de Exceções:** Exceções de domínio personalizadas e **tratamento de erros global via `@ControllerAdvice`**, garantindo respostas HTTP padronizadas e sem exposição de stacktraces.
+- **Precisão Financeira:** Utilização de `BigDecimal` para manipulação de saldos e transações, evitando erros de precisão comuns em tipos de ponto flutuante.
+- **Testes Automatizados:** Testes unitários com JUnit 5 e testes de integração com Spring Test (`@SpringBootTest`).
+- **Gerenciamento de Build:** Maven para gerenciamento de dependências e automação de build.
 
 ---
 
 ## ⚙️ Funcionalidades
 
-### 👤 Cadastro e Consulta de Cliente
-- Solicita nome, CPF e e-mail.
-- Persiste o cliente no banco de dados e impede duplicidade de CPF.
-- O cliente mantém relação bidirecional com suas contas bancárias (`@OneToMany`).
+### 👤 Cadastro e Consulta de Clientes
+
+- Cadastro de clientes com nome, CPF e e-mail.
+- Persistência dos dados no banco de dados.
+- Validação para impedir duplicidade de CPF.
+- Relacionamento bidirecional entre clientes e suas contas bancárias utilizando `@OneToMany`.
 
 ### 🏦 Tipos de Conta
-A estrutura utiliza uma classe abstrata `Conta` com herança JPA (`@Inheritance(strategy = InheritanceType.JOINED)`):
+
+A estrutura utiliza uma classe abstrata `Conta`, com herança JPA através de:
+
+`@Inheritance(strategy = InheritanceType.JOINED)`
 
 #### Conta Corrente (`ContaCorrente`)
-- Possui um limite de crédito configurável (ex: R$ 5.000).
-- O valor disponível para saque considera:
-  $$\text{Saldo Disponível} = \text{Saldo Atual} + \text{Limite}$$
+
+- Possui limite de crédito configurável.
+- O valor disponível para saque considera o saldo atual mais o limite.
 - Permite saldo negativo controlado até o limite contratado.
 
 #### Conta Poupança (`ContaPoupanca`)
+
 - Não possui limite de crédito.
-- Permite saques apenas quando há saldo próprio suficiente na conta.
+- Permite saques somente quando há saldo próprio suficiente na conta.
+
+### 💸 Operações Bancárias
+
+- Depósitos.
+- Saques.
+- Transferências entre contas.
+- Validação de saldo disponível e limites.
+- Transferências bancárias atômicas, garantindo consistência nas operações.
+- Histórico de transações persistido no banco de dados.
+- Consulta de extrato bancário.
 
 ---
 
-### 💰 Operações Financeiras
+## 📡 Endpoints da API REST
 
-1. **Depósito**:
-   - Valida para impedir valores menores ou iguais a zero ou nulos.
-   - Credita o saldo e registra uma transação do tipo `DEPOSITO` no histórico e no banco de dados.
+A aplicação disponibiliza controladores REST para gerenciamento de clientes, contas e transações.
 
-2. **Saque**:
-   - Valida as regras de negócio de cada conta polimorficamente.
-   - Trata situações de saldo insuficiente (`SaldoInsuficienteException`) e valores inválidos (`ValorInvalidoException`).
-   - Debita o saldo e registra uma transação do tipo `SAQUE`.
+Abaixo estão alguns dos principais endpoints documentados.
 
-3. **Transferência**:
-   - Operação atômica (`@Transactional`): debita da conta de origem e credita na conta de destino.
-   - Valida se as contas existem e impede transferências para a mesma conta.
-   - Registra transações do tipo `TRANSFERENCIA` nas duas contas participantes.
+### 1. Listar Contas
 
-4. **Extrato**:
-   - Consulta o histórico persistido das operações realizadas pela conta filtrado por intervalo de datas.
-   - Exibe tipo da operação, valor e timestamp (`LocalDateTime`).
+Retorna uma lista com todas as contas cadastradas, utilizando DTOs para evitar exposição direta das entidades JPA.
 
----
+**GET** `/contas`
 
-## 🧠 Conceitos de POO e Arquitetura
+**Resposta (200 OK):**
 
-### Abstração e Herança
-A classe base `Conta` define a estrutura fundamental e o comportamento comum:
-```java
-@Entity
-@Table(name = "tb_contas")
-@Inheritance(strategy = InheritanceType.JOINED)
-public abstract class Conta {
-    ...
-    public abstract void sacar(Long valor) throws SaldoInsuficienteException, ValorInvalidoException;
+```json
+[
+  {
+    "id": 1,
+    "tipoConta": "ContaCorrente",
+    "saldo": 5000.00,
+    "clienteId": 1
+  }
+]
+```
+
+### 2. Buscar Conta por ID
+
+Retorna os dados de uma conta específica.
+
+**GET** `/contas/{id}`
+
+Exemplo: `GET /contas/1`
+
+**Resposta (200 OK):**
+
+```json
+{
+  "id": 1,
+  "tipoConta": "ContaCorrente",
+  "saldo": 5000.00,
+  "clienteId": 1
 }
 ```
-As classes filhas `ContaCorrente` e `ContaPoupanca` reutilizam essa base e especializam as regras de saque.
 
-### Polimorfismo
-O método `sacar()` possui comportamentos distintos dependendo do tipo da conta em tempo de execução:
-```java
-// ContaCorrente considera saldo + limite
-long saldoDisponivel = this.getSaldo() + this.limite;
+### 3. Criar Nova Conta
 
-// ContaPoupanca considera estritamente o saldo em conta
-if (valor <= this.getSaldo()) { ... }
+Cadastra uma nova conta (Corrente ou Poupança) vinculada a um cliente existente.
+
+**POST** `/contas`
+
+**Body (JSON):**
+
+```json
+{
+  "numero": 12345,
+  "clienteId": 1,
+  "saldo": 1000.00,
+  "tipoConta": "CORRENTE"
+}
 ```
 
-### Encapsulamento
-Atributos protegidos por modificadores privados/protegidos, expondo apenas operações seguras por métodos e protegendo o estado financeiro da conta contra modificações externas indevidas.
+**Resposta (201 Created):**
 
----
+```json
+{
+  "id": 2,
+  "tipoConta": "ContaCorrente",
+  "saldo": 1000.00,
+  "clienteId": 1
+}
+```
 
-## 🛡️ Tratamento de Exceções
+### 4. Deletar Conta
 
-As regras de negócio lançam exceções de domínio padronizadas estendendo `RuntimeException`:
+Remove uma conta do sistema através do seu identificador.
 
-- `SaldoInsuficienteException`: Lançada quando a operação excede o saldo ou saldo + limite.
-- `ValorInvalidoException`: Lançada ao informar valores nulos, negativos ou zero.
+**DELETE** `/contas/{id}`
 
-Ao estenderem `RuntimeException`, integram-se perfeitamente com a anotação `@Transactional` do Spring, garantindo o **rollback automático** caso ocorra qualquer inconsistência durante uma transação bancária.
+Exemplo: `DELETE /contas/2`
+
+**Resposta (204 No Content):**
+
+Sem conteúdo retornado em caso de sucesso.
 
 ---
 
@@ -110,172 +153,172 @@ Ao estenderem `RuntimeException`, integram-se perfeitamente com a anotação `@T
 
 ```text
 Sistema-Bancario-Java/
+│
 ├── src/
 │   ├── main/
 │   │   ├── java/
 │   │   │   └── org/pedro/
-│   │   │       ├── SistemaBancarioApplication.java   # Ponto de entrada Spring Boot
+│   │   │       ├── SistemaBancarioApplication.java
+│   │   │       │
 │   │   │       ├── config/
-│   │   │       │   └── SecurityConfig.java            # Configuração de Segurança da API
+│   │   │       │   └── SecurityConfig.java
+│   │   │       │
 │   │   │       ├── controller/
-│   │   │       │   ├── ClienteController.java         # API REST para Clientes
-│   │   │       │   ├── ContaController.java           # API REST para Contas
-│   │   │       │   ├── TransacaoController.java       # API REST para Transações
+│   │   │       │   ├── ClienteController.java
+│   │   │       │   ├── ContaController.java
+│   │   │       │   ├── TransacaoController.java
 │   │   │       │   └── Console/
-│   │   │       │       └── MenuConsole.java           # CLI interativa (CommandLineRunner)
+│   │   │       │       └── MenuConsole.java
+│   │   │       │
 │   │   │       ├── dto/
-│   │   │       │   ├── request/                       # DTOs de Requisição (Cliente, Conta, Deposito, etc.)
-│   │   │       │   └── response/                      # DTOs de Resposta
+│   │   │       │   ├── request/
+│   │   │       │   └── response/
+│   │   │       │
 │   │   │       ├── exception/
 │   │   │       │   ├── SaldoInsuficienteException.java
-│   │   │       │   └── ValorInvalidoException.java
+│   │   │       │   ├── ValorInvalidoException.java
+│   │   │       │   └── GlobalExceptionHandler.java
+│   │   │       │
 │   │   │       ├── model/
-│   │   │       │   ├── Cliente.java                   # Entidade JPA
-│   │   │       │   ├── Conta.java                     # Entidade base JPA
-│   │   │       │   ├── ContaCorrente.java             # Subclasse JPA
-│   │   │       │   ├── ContaPoupanca.java             # Subclasse JPA
-│   │   │       │   ├── TipoTransacao.java             # Enum (DEPOSITO, SAQUE, TRANSFERENCIA)
-│   │   │       │   └── Transacao.java                 # Entidade JPA
+│   │   │       │   ├── Cliente.java
+│   │   │       │   ├── Conta.java
+│   │   │       │   ├── ContaCorrente.java
+│   │   │       │   ├── ContaPoupanca.java
+│   │   │       │   ├── TipoTransacao.java
+│   │   │       │   └── Transacao.java
+│   │   │       │
 │   │   │       ├── repository/
-│   │   │       │   ├── ClienteRepository.java         # Spring Data JPA
-│   │   │       │   ├── ContaRepository.java           # Spring Data JPA
-│   │   │       │   └── TransacaoRepository.java       # Spring Data JPA
+│   │   │       │   ├── ClienteRepository.java
+│   │   │       │   ├── ContaRepository.java
+│   │   │       │   └── TransacaoRepository.java
+│   │   │       │
 │   │   │       └── service/
-│   │   │           ├── ClienteService.java            # Regras e transações de Cliente
-│   │   │           ├── ContaService.java              # Regras e transações de Conta
-│   │   │           └── TransacaoService.java          # Depósito, saque, transferência, extrato
-│   │   └── resources/
-│   │       ├── application.properties                 # Configurações do H2 e JPA
-│   │       └── application-test.properties            # Configurações isoladas para testes
+│   │   │           ├── ClienteService.java
+│   │   │           ├── ContaService.java
+│   │   │           └── TransacaoService.java
+│   │
+│   └── resources/
+│       ├── application.properties
+│       └── application-test.properties
+│
 │   └── test/
 │       └── java/
 │           └── org/pedro/
-│               ├── SistemaBancarioApplicationTests.java # Teste de integração Spring Boot
-│               └── model/
-│                   ├── ContaCorrenteTest.java         # Testes de unidade expandidos
-│                   └── ContaPoupancaTest.java         # Testes de unidade expandidos
+│
+├── docker-compose.yml
 ├── pom.xml
 └── README.md
 ```
 
 ---
 
-## 🛠️ Tecnologias
+## 🛠️ Tecnologias Utilizadas
 
-| Tecnologia | Finalidade |
-|---|---|
-| ☕ **Java 17 LTS** | Linguagem principal do projeto |
-| 🍃 **Spring Boot 3 / 4** | Framework base da aplicação |
-| 🌐 **Spring Web** | Construção da arquitetura de controladores REST |
-| 🔒 **Spring Security** | Camada de segurança e controle de acesso inicial (`SecurityConfig`) |
-| 💾 **Spring Data JPA / Hibernate** | Mapeamento ORM e abstração de persistência |
-| 🐘 **PostgreSQL 16 (Docker)** | Banco de dados relacional principal em container |
-| 💾 **Rotina de Backup Docker** | Container automatizado com dumps periódicos compactados (.sql.gz) |
-| 🗄️ **H2 Database** | Banco em memória para execução rápida de testes automatizados |
-| 🧪 **JUnit 5 & AssertJ** | Testes automatizados unitários e de integração |
-| 📦 **Maven** | Gerenciador de dependências e automação de build |
+| Tecnologia                 | Finalidade                                           |
+| -------------------------- | ---------------------------------------------------- |
+| ☕ Java LTS                 | Linguagem principal do projeto                       |
+| 🍃 Spring Boot 3.4.1       | Framework base da aplicação                          |
+| 🌐 Spring Web              | Construção da API REST                               |
+| 🔒 Spring Security         | Configuração da camada de segurança                  |
+| 💾 Spring Data JPA         | Persistência e acesso aos dados                      |
+| ⚙️ Hibernate               | Mapeamento Objeto-Relacional (ORM)                   |
+| 🐘 PostgreSQL 16           | Banco de dados relacional principal                  |
+| 🐳 Docker & Docker Compose | Containerização e gerenciamento do banco             |
+| 💾 Docker Backup           | Rotina de backups periódicos compactados (`.sql.gz`) |
+| 🗄️ H2 Database            | Banco em memória para testes                         |
+| 🧪 JUnit 5                 | Testes automatizados                                 |
+| ✅ AssertJ                  | Biblioteca de asserções para testes                  |
+| 📦 Maven                   | Gerenciamento de dependências e build                |
+| 📐 BigDecimal              | Precisão decimal para operações financeiras           |
 
 ---
 
 ## 🚀 Como Executar
 
 ### Pré-requisitos
-- **JDK 17** ou superior instalado e configurado no `PATH`.
-- **Maven** instalado.
-- **Docker e Docker Compose** instalados (ex: Docker Desktop).
+
+Antes de executar o projeto, certifique-se de possuir:
+
+- JDK compatível instalado e configurado no PATH.
+- Maven instalado.
+- Docker e Docker Compose instalados (ex.: Docker Desktop).
 
 ### 1. Clonar o repositório
 
 ```bash
 git clone https://github.com/PedrorCastro/Sistema-Bancario-Java.git
+
 cd Sistema-Bancario-Java
 ```
 
-### 2. Subir o Banco de Dados PostgreSQL e o Backup via Docker
-Execute o Docker Compose na raiz do projeto:
+### 2. Configurar as variáveis de ambiente
+
+Configure as variáveis necessárias para a conexão com o PostgreSQL, de acordo com as propriedades utilizadas em `application.properties`.
+
+Exemplo:
+
+```env
+URL_BANCO=jdbc:postgresql://localhost:5432/sistema_bancario
+DB_USER=seu_usuario
+DB_PASSWORD=sua_senha
+```
+
+> Não compartilhe credenciais reais nem envie arquivos `.env` com informações sensíveis para o GitHub.
+
+### 3. Subir o banco de dados
+
+Na raiz do projeto, execute:
+
 ```bash
 docker compose up -d
 ```
-Isso iniciará:
-1. **`bancodb-postgres`**: PostgreSQL 16 na porta `5432` com volume persistente local.
-2. **`bancodb-backup`**: Container automático que gera dumps compactados (`.sql.gz`) na pasta `./backups` da sua máquina.
 
-### 3. Compilar e executar os testes
-Os testes rodam isoladamente em memória via perfil de teste (H2), garantindo velocidade sem depender do banco:
+Esse comando inicia os serviços definidos no Docker Compose, incluindo o PostgreSQL e os serviços de backup configurados.
+
+### 4. Executar os testes
+
+Para compilar o projeto e executar a suíte de testes:
+
 ```bash
 mvn clean test
 ```
 
-### 4. Executar a aplicação
-Pela linha de comando via Maven:
+### 5. Executar a aplicação
+
+Para iniciar a aplicação utilizando Maven:
+
 ```bash
 mvn spring-boot:run
 ```
-Ou executando a classe principal pela sua IDE:
-```text
-src/main/java/org/pedro/SistemaBancarioApplication.java
-```
-
----
-
-## 💾 Gerenciamento de Backups Locais (Docker)
-
-Além dos backups automáticos diários em `./backups`, você pode disparar comandos manuais a qualquer momento:
-
-- **Gerar backup manual imediato:**
-  ```bash
-  docker exec -t bancodb-postgres pg_dump -U postgres -d bancodb > ./backups/backup_manual.sql
-  ```
-
-- **Restaurar um backup:**
-  ```powershell
-  # No PowerShell do Windows:
-  Get-Content ./backups/backup_manual.sql | docker exec -i bancodb-postgres psql -U postgres -d bancodb
-  ```
-
-- **Parar os containers sem perder os dados:**
-  ```bash
-  docker compose down
-  ```
-
----
-
-## 📝 Histórico de Refatoração e Melhorias Aplicadas
-
-Abaixo está o registro detalhado das correções arquiteturais e de código implementadas no projeto:
-
-| Componente | O que foi alterado | Motivo da mudança |
-|---|---|---|
-| **`Cliente`** | Adicionado `@Id Long id`, construtor no-args, `@Table` e removida lista duplicada `conta` | Exigência da JPA para entidades; corrigiu falha de compilação/inicialização do `ClienteRepository`. |
-| **`Conta`** | Corrigido relacionamento de `historico` para `@OneToMany`, removido `cliente` redundante (mantido `titular`) e adicionado `@Inheritance` | Listas não podem ser `@ManyToOne`; unificação de referências e definição da estratégia de tabelas no banco. |
-| **`ContaCorrente` / `ContaPoupanca`** | Anotadas com `@Entity`, adicionados construtores no-args e construtor com sobrecarga compatível | Permitir persistência polimórfica das subclasses e evitar ambiguidade do compilador Java. |
-| **`Transacao`** | Adicionada anotação `@Enumerated(EnumType.STRING)` e atributo `@ManyToOne Conta conta` | Evita corrupção ordinal de dados no banco e viabiliza as consultas `findByContaId` no repositório. |
-| **Controllers & DTOs** | Criação de `ClienteController`, `ContaController`, `TransacaoController` e pacotes de requisição/resposta | Transição estruturada para uma API REST desacoplada, organizada por padrões profissionais de backend. |
-| **`SecurityConfig`** | Implementada configuração base de segurança da API | Estruturação inicial do Spring Security para gerenciamento de endpoints. |
-| **`SaldoInsuficienteException`** | Alterada para estender `RuntimeException` | Padronização com `ValorInvalidoException` e garantia de rollback automático em anotações `@Transactional`. |
-| **`ClienteService` / `ContaService`** | Métodos ajustados para retornar `Optional` ou dados consistentes, com injeção por construtor | Eliminação de métodos `void` incorretos e aderência às boas práticas do Spring. |
-| **`TransacaoService`** | Eliminação de transações duplicadas/órfãs, inclusão de validação de mesma conta e suporte a `TRANSFERENCIA` | Manter a integridade contábil do extrato e sincronizar com o banco via cascata JPA. |
-| **`MenuConsole`** | Isolado na pasta `controller/Console`, integrado aos Services com leitura resiliente e `@Profile("!test")` | Permitir a execução de testes do Spring sem travar esperando entrada de terminal interativo. |
-| **Testes Unitários & Integração** | Adicionados testes de contexto `@SpringBootTest` e validações de caminhos felizes de depósito/saque | Aumentar a confiabilidade do código e garantir estabilidade da aplicação. |
 
 ---
 
 ## 🔮 Próximas Evoluções
 
-- [x] Persistência em banco de dados relacional (PostgreSQL + H2 para testes)
-- [x] Integração completa com Spring Data JPA
-- [x] Transferência bancária atômica entre contas
-- [x] Testes unitários e de integração (JUnit 5 + Spring Boot Test)
-- [x] Integração com PostgreSQL via Docker e rotina de backup local
-- [x] API REST com controladores (`@RestController`) e DTOs
-- [ ] Documentação interativa da API com OpenAPI / Swagger
-- [ ] Validação formal de dígitos de CPF (algoritmo receita federal)
-- [ ] Autenticação e autorização avançada via JWT / Spring Security
+- [x] Persistência em banco de dados relacional (PostgreSQL + H2 para testes).
+- [x] Integração com Spring Data JPA e Hibernate.
+- [x] Transferência bancária atômica entre contas.
+- [x] Testes unitários e de integração (JUnit 5 + Spring Boot Test).
+- [x] Integração com PostgreSQL via Docker.
+- [x] Rotina de backup automatizado.
+- [x] API REST com controladores (`@RestController`).
+- [x] Padronização das respostas utilizando DTOs.
+- [x] Organização da aplicação em arquitetura em camadas.
+- [x] Configuração da camada de segurança com Spring Security.
+- [ ] Implementação de autenticação e autorização com JWT.
+- [ ] Documentação interativa da API com OpenAPI / Swagger.
 
 ---
 
 ## 👨‍💻 Autor
 
-**Pedro Rodrigues de Castro Bezerra**  
-Estudante de Ciência da Computação | Desenvolvedor Backend Java / Spring Boot  
-- GitHub: [PedrorCastro](https://github.com/PedrorCastro)
+**Pedro Rodrigues de Castro Bezerra**
+
+Estudante de Ciência da Computação | Desenvolvedor Backend Java / Spring Boot
+
+- GitHub: [@PedrorCastro](https://github.com/PedrorCastro)
+- Repositório: [Sistema-Bancario-Java](https://github.com/PedrorCastro/Sistema-Bancario-Java)
+
+---
+
+⭐ Se este projeto foi interessante, considere deixar uma estrela no repositório!
