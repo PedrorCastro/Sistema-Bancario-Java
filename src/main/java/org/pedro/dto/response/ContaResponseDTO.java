@@ -5,7 +5,7 @@ import java.math.BigDecimal;
 public record ContaResponseDTO(
     Long id,
     String tipoConta,
-    BigDecimal saldo,
+    Long saldo,
     Long clienteId
 ) {
 

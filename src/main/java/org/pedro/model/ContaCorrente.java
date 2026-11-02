@@ -12,7 +12,7 @@ public class ContaCorrente extends Conta {
 
     private Long limite = 0L;
 
-    protected ContaCorrente() {
+    public ContaCorrente() {
         super();
     }
 

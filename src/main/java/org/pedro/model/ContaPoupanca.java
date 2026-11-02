@@ -10,7 +10,7 @@ import org.pedro.exception.ValorInvalidoException;
 @Table(name = "tb_contas_poupancas")
 public class ContaPoupanca extends Conta {
 
-    protected ContaPoupanca() {
+    public ContaPoupanca() {
         super();
     }
 

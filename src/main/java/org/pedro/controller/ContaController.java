@@ -1,5 +1,6 @@
 package org.pedro.controller;
 
+import jakarta.validation.Valid;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -10,6 +11,7 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.pedro.service.ContaService;
+import org.pedro.service.ClienteService;
 import org.pedro.dto.request.ContaRequestDTO;
 import org.pedro.dto.request.TipoConta;
 import org.pedro.dto.response.ContaResponseDTO;
@@ -25,26 +27,51 @@ import org.pedro.model.ContaPoupanca;
 public class ContaController {
 
     private final ContaService contaService;
+    private final ClienteService clienteService;
 
-    public ContaController(ContaService contaService) {
+    public ContaController(ContaService contaService, ClienteService clienteService) {
         this.contaService = contaService;
+        this.clienteService = clienteService;
     }
 
     @PostMapping
-public ResponseEntity<ContaResponseDTO> criarConta(
-        @RequestBody ContaRequestDTO contaRequestDTO) {
+    public ResponseEntity<ContaResponseDTO> criarConta(@RequestBody @Valid ContaRequestDTO dto) {
 
-    Conta createdConta = contaService.criarConta(contaRequestDTO);
 
-    ContaResponseDTO responseDTO = new ContaResponseDTO(
-        createdConta.getId(),
-        createdConta.getClass().getSimpleName(),
-        createdConta.getSaldo(),
-        createdConta.getTitular().getId()
-    );
+        Cliente cliente = clienteService.buscarPorId(dto.clienteId())
+                .orElseThrow(() -> new RuntimeException("Cliente não encontrado com ID: " + dto.clienteId()));
 
-    return ResponseEntity.status(HttpStatus.CREATED).body(responseDTO);
-}
+
+        Conta conta;
+        if (dto.tipoConta() == TipoConta.CORRENTE) {
+            ContaCorrente cc = new ContaCorrente();
+
+            conta = cc;
+        } else {
+            conta = new ContaPoupanca();
+        }
+
+        conta.setNumero(dto.numero());
+        conta.setTitular(cliente);
+
+
+        if (dto.saldo() != null && dto.saldo() > 0) {
+            conta.depositar(dto.saldo());
+        }
+
+
+        Conta createdConta = contaService.criarConta(conta);
+
+
+        ContaResponseDTO responseDTO = new ContaResponseDTO(
+                createdConta.getId(),
+                createdConta.getClass().getSimpleName(),
+                createdConta.getSaldo(),
+                createdConta.getTitular().getId()
+        );
+
+        return ResponseEntity.status(HttpStatus.CREATED).body(responseDTO);
+    }
     
     @GetMapping("/{id}")
     public ResponseEntity<Conta> buscarPorId(@PathVariable Long id){

@@ -18,6 +18,9 @@ public record ContaRequestDTO(
     TipoConta tipoConta,
 
     @PositiveOrZero
-    Long limite
+    Long limite,
+
+    @PositiveOrZero
+    Long saldo
 
 ) {}
