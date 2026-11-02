@@ -11,14 +11,9 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.pedro.service.ContaService;
-import org.pedro.service.ClienteService;
 import org.pedro.dto.request.ContaRequestDTO;
-import org.pedro.dto.request.TipoConta;
 import org.pedro.dto.response.ContaResponseDTO;
-import org.pedro.model.Cliente;
 import org.pedro.model.Conta;
-import org.pedro.model.ContaCorrente;
-import org.pedro.model.ContaPoupanca;
 
 import java.util.List;
 
@@ -27,56 +22,21 @@ import java.util.List;
 public class ContaController {
 
     private final ContaService contaService;
-    private final ClienteService clienteService;
 
-    public ContaController(ContaService contaService, ClienteService clienteService) {
+    public ContaController(ContaService contaService) {
         this.contaService = contaService;
-        this.clienteService = clienteService;
     }
 
-    @PostMapping("api/contas")
+    @PostMapping("/api/contas")
     public ResponseEntity<ContaResponseDTO> criarConta(@RequestBody @Valid ContaRequestDTO dto) {
-
-        Cliente cliente = clienteService.buscarPorId(dto.clienteId())
-                .orElseThrow(() -> new RuntimeException("Cliente não encontrado com ID: " + dto.clienteId()));
-
-        Conta conta;
-        if (dto.tipoConta() == TipoConta.CORRENTE) {
-            ContaCorrente cc = new ContaCorrente();
-            conta = cc;
-        } else {
-            conta = new ContaPoupanca();
-        }
-
-        conta.setNumero(dto.numero());
-        conta.setTitular(cliente);
-
-        if (dto.saldo() != null && dto.saldo() > 0) {
-            conta.depositar(dto.saldo());
-        }
-
-
-        Conta createdConta = contaService.criarConta(conta);
-
-        ContaResponseDTO responseDTO = new ContaResponseDTO(
-                createdConta.getId(),
-                createdConta.getClass().getSimpleName(),
-                (long) createdConta.getSaldo(),
-                createdConta.getTitular().getId()
-        );
-
-        return ResponseEntity.status(HttpStatus.CREATED).body(responseDTO);
+        Conta createdConta = contaService.criarConta(dto);
+        return ResponseEntity.status(HttpStatus.CREATED).body(mapToResponseDTO(createdConta));
     }
 
     @GetMapping("/{id}")
     public ResponseEntity<ContaResponseDTO> buscarPorId(@PathVariable Long id){
         return contaService.buscarPorId(id)
-                .map(conta -> ResponseEntity.ok(new ContaResponseDTO(
-                        conta.getId(),
-                        conta.getClass().getSimpleName(),
-                        (long) conta.getSaldo(),
-                        conta.getTitular().getId()
-                )))
+                .map(conta -> ResponseEntity.ok(mapToResponseDTO(conta)))
                 .orElse(ResponseEntity.notFound().build());
     }
 
@@ -92,13 +52,17 @@ public class ContaController {
     @GetMapping
     public ResponseEntity<List<ContaResponseDTO>> listarContas() {
         List<ContaResponseDTO> contas = contaService.listarTodos().stream()
-                .map(conta -> new ContaResponseDTO(
-                        conta.getId(),
-                        conta.getClass().getSimpleName(),
-                        (long) conta.getSaldo(),
-                        conta.getTitular().getId()
-                ))
+                .map(this::mapToResponseDTO)
                 .toList();
         return ResponseEntity.ok(contas);
+    }
+
+    private ContaResponseDTO mapToResponseDTO(Conta conta) {
+        return new ContaResponseDTO(
+                conta.getId(),
+                conta.getClass().getSimpleName(),
+                conta.getSaldo(),
+                conta.getTitular().getId()
+        );
     }
 }

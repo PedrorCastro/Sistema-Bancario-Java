@@ -1,5 +1,6 @@
 package org.pedro.model;
 
+import java.math.BigDecimal;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
@@ -18,13 +19,13 @@ import jakarta.persistence.Table;
 import org.pedro.exception.SaldoInsuficienteException;
 import org.pedro.exception.ValorInvalidoException;
 
-@Entity 
+@Entity
 @Table(name = "tb_contas")
 @Inheritance(strategy = InheritanceType.JOINED)
 public abstract class Conta {
 
-    @Id 
-    @GeneratedValue(strategy = GenerationType.IDENTITY) 
+    @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
     private Integer numero;
@@ -33,22 +34,18 @@ public abstract class Conta {
     @JoinColumn(name = "titular_id")
     private Cliente titular;
 
-    private Long saldo = 0L;
+    private BigDecimal saldo = BigDecimal.ZERO;
 
     @OneToMany(mappedBy = "conta", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<Transacao> historico = new ArrayList<>();
 
-    // Construtor sem argumentos exigido pela JPA
     protected Conta() {
     }
 
-    // Construtor
     public Conta(Integer numero, Cliente titular) {
         this.numero = numero;
         this.titular = titular;
     }
-
-    // Getters e Setters
 
     public Long getId() {
         return id;
@@ -74,11 +71,11 @@ public abstract class Conta {
         this.titular = titular;
     }
 
-    public Long getSaldo() {
+    public BigDecimal getSaldo() {
         return saldo;
     }
 
-    protected void setSaldo(Long saldo) {
+    protected void setSaldo(BigDecimal saldo) {
         this.saldo = saldo;
     }
 
@@ -90,19 +87,17 @@ public abstract class Conta {
         this.historico = historico != null ? historico : new ArrayList<>();
     }
 
-    public abstract void sacar(Long valor) throws SaldoInsuficienteException, ValorInvalidoException;
+    public abstract void sacar(BigDecimal valor) throws SaldoInsuficienteException, ValorInvalidoException;
 
-
-    public void depositar(Long valor) throws ValorInvalidoException {
+    public void depositar(BigDecimal valor) throws ValorInvalidoException {
         validarValor(valor);
-        this.saldo += valor;
+        this.saldo = this.saldo.add(valor);
         Transacao transacao = new Transacao(valor, TipoTransacao.DEPOSITO, this);
         historico.add(transacao);
     }
 
-
-    protected void validarValor(Long valor) throws ValorInvalidoException {
-        if (valor == null || valor <= 0) {
+    protected void validarValor(BigDecimal valor) throws ValorInvalidoException {
+        if (valor == null || valor.compareTo(BigDecimal.ZERO) <= 0) {
             throw new ValorInvalidoException("Transação inválida: o valor deve ser maior que zero");
         }
     }

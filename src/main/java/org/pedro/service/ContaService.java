@@ -2,15 +2,19 @@ package org.pedro.service;
 
 import java.util.List;
 import java.util.Optional;
+import java.math.BigDecimal;
+import org.springframework.transaction.annotation.Transactional;
 
 import org.pedro.model.Cliente;
 import org.pedro.model.Conta;
+import org.pedro.model.ContaCorrente;
+import org.pedro.model.ContaPoupanca;
 import org.pedro.repository.ContaRepository;
 import org.springframework.stereotype.Service;
-import org.pedro.service.ClienteService;
+import org.pedro.dto.request.ContaRequestDTO;
+import org.pedro.dto.request.TipoConta;
 
-
-@Service 
+@Service
 public class ContaService {
 
     private final ContaRepository contaRepository;
@@ -22,19 +26,40 @@ public class ContaService {
 
         this.contaRepository = contaRepository;
         this.clienteService = clienteService;
-    
     }
 
-    public Conta criarConta(Conta conta) {
-        if (conta == null || conta.getNumero() == null) {
-            throw new IllegalArgumentException("Conta e número da conta não podem ser nulos");
+    @Transactional
+    public Conta criarConta(ContaRequestDTO dto) {
+        if (dto == null || dto.numero() == null) {
+            throw new IllegalArgumentException("Dados da conta e número da conta não podem ser nulos");
         }
-        if (contaRepository.existsByNumero(conta.getNumero())) {
-            throw new IllegalArgumentException("Conta já cadastrada com o número: " + conta.getNumero());
+
+        if (contaRepository.existsByNumero(dto.numero())) {
+            throw new IllegalArgumentException("Conta já cadastrada com o número: " + dto.numero());
         }
+
+        Cliente cliente = clienteService.buscarPorId(dto.clienteId())
+                .orElseThrow(() -> new RuntimeException("Cliente não encontrado com ID: " + dto.clienteId()));
+
+        Conta conta = (dto.tipoConta() == TipoConta.CORRENTE)
+                      ? new ContaCorrente()
+                      : new ContaPoupanca();
+
+        conta.setNumero(dto.numero());
+        conta.setTitular(cliente);
+
+        if (dto.saldo() != null && dto.saldo().compareTo(BigDecimal.ZERO) > 0) {
+            try {
+                conta.depositar(dto.saldo());
+            } catch (Exception e) {
+                throw new IllegalArgumentException("Erro ao realizar depósito inicial: " + e.getMessage());
+            }
+        }
+
         return contaRepository.save(conta);
     }
 
+    @Transactional
     public boolean deletarConta(Long id) {
         if (id == null) {
             throw new IllegalArgumentException("ID não pode ser nulo");

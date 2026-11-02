@@ -1,5 +1,6 @@
 package org.pedro.dto.request;
 
+import java.math.BigDecimal;
 import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Positive;
 import jakarta.validation.constraints.PositiveOrZero;
@@ -18,9 +19,9 @@ public record ContaRequestDTO(
     TipoConta tipoConta,
 
     @PositiveOrZero
-    Long limite,
+    BigDecimal limite,
 
     @PositiveOrZero
-    Long saldo
+    BigDecimal saldo
 
 ) {}

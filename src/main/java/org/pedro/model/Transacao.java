@@ -1,5 +1,6 @@
 package org.pedro.model;
 
+import java.math.BigDecimal;
 import java.time.LocalDateTime;
 import java.util.Objects;
 
@@ -13,22 +14,20 @@ import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
 import jakarta.persistence.Table;
 
-@Entity 
+@Entity
 @Table(name = "tb_transacoes")
 public class Transacao {
 
-    @Id 
+    @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    private Long valor;
-
+    private BigDecimal valor;
 
     @Enumerated(EnumType.STRING)
     private TipoTransacao tipo;
 
     private LocalDateTime data = LocalDateTime.now();
-
 
     @ManyToOne
     @JoinColumn(name = "conta_id")
@@ -37,20 +36,18 @@ public class Transacao {
     protected Transacao() {
     }
 
-    public Transacao(Long valor, TipoTransacao tipo) {
+    public Transacao(BigDecimal valor, TipoTransacao tipo) {
         this.valor = valor;
         this.tipo = tipo;
         this.data = LocalDateTime.now();
     }
 
-    public Transacao(Long valor, TipoTransacao tipo, Conta conta) {
+    public Transacao(BigDecimal valor, TipoTransacao tipo, Conta conta) {
         this.valor = valor;
         this.tipo = tipo;
         this.conta = conta;
         this.data = LocalDateTime.now();
     }
-
-    // Getters e Setters
 
     public Long getId() {
         return id;
@@ -60,11 +57,11 @@ public class Transacao {
         this.id = id;
     }
 
-    public Long getValor() {
+    public BigDecimal getValor() {
         return valor;
     }
 
-    public void setValor(Long valor) {
+    public void setValor(BigDecimal valor) {
         this.valor = valor;
     }
 
