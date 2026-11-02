@@ -20,7 +20,7 @@ import org.pedro.model.Conta;
 import org.pedro.model.ContaCorrente;
 import org.pedro.model.ContaPoupanca;
 
-
+import java.util.List;
 
 @RestController
 @RequestMapping("/contas")
@@ -34,18 +34,15 @@ public class ContaController {
         this.clienteService = clienteService;
     }
 
-    @PostMapping
+    @PostMapping("api/contas")
     public ResponseEntity<ContaResponseDTO> criarConta(@RequestBody @Valid ContaRequestDTO dto) {
-
 
         Cliente cliente = clienteService.buscarPorId(dto.clienteId())
                 .orElseThrow(() -> new RuntimeException("Cliente não encontrado com ID: " + dto.clienteId()));
 
-
         Conta conta;
         if (dto.tipoConta() == TipoConta.CORRENTE) {
             ContaCorrente cc = new ContaCorrente();
-
             conta = cc;
         } else {
             conta = new ContaPoupanca();
@@ -54,7 +51,6 @@ public class ContaController {
         conta.setNumero(dto.numero());
         conta.setTitular(cliente);
 
-
         if (dto.saldo() != null && dto.saldo() > 0) {
             conta.depositar(dto.saldo());
         }
@@ -62,27 +58,28 @@ public class ContaController {
 
         Conta createdConta = contaService.criarConta(conta);
 
-
         ContaResponseDTO responseDTO = new ContaResponseDTO(
                 createdConta.getId(),
                 createdConta.getClass().getSimpleName(),
-                createdConta.getSaldo(),
+                (long) createdConta.getSaldo(),
                 createdConta.getTitular().getId()
         );
 
         return ResponseEntity.status(HttpStatus.CREATED).body(responseDTO);
     }
-    
+
     @GetMapping("/{id}")
-    public ResponseEntity<Conta> buscarPorId(@PathVariable Long id){
-        Conta conta =  contaService.buscarPorId(id).orElse(null);
-        if (conta != null) {
-            return new ResponseEntity<>(conta, HttpStatus.OK);
-        } else {
-            return ResponseEntity.notFound().build();
-        }
+    public ResponseEntity<ContaResponseDTO> buscarPorId(@PathVariable Long id){
+        return contaService.buscarPorId(id)
+                .map(conta -> ResponseEntity.ok(new ContaResponseDTO(
+                        conta.getId(),
+                        conta.getClass().getSimpleName(),
+                        (long) conta.getSaldo(),
+                        conta.getTitular().getId()
+                )))
+                .orElse(ResponseEntity.notFound().build());
     }
-    
+
     @DeleteMapping("/{id}")
     public ResponseEntity<Void> deletarConta(@PathVariable Long id){
         if (contaService.deletarConta(id)) {
@@ -92,5 +89,16 @@ public class ContaController {
         }
     }
 
-
+    @GetMapping
+    public ResponseEntity<List<ContaResponseDTO>> listarContas() {
+        List<ContaResponseDTO> contas = contaService.listarTodos().stream()
+                .map(conta -> new ContaResponseDTO(
+                        conta.getId(),
+                        conta.getClass().getSimpleName(),
+                        (long) conta.getSaldo(),
+                        conta.getTitular().getId()
+                ))
+                .toList();
+        return ResponseEntity.ok(contas);
+    }
 }
