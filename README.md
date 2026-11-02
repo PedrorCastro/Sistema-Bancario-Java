@@ -256,7 +256,7 @@ Abaixo está o registro detalhado das correções arquiteturais e de código imp
 - [x] Transferência bancária atômica entre contas
 - [x] Testes unitários e de integração (JUnit 5 + Spring Boot Test)
 - [x] Integração com PostgreSQL via Docker e rotina de backup local
-- [ ] API REST com controladores (`@RestController`) e DTOs
+- [X] API REST com controladores (`@RestController`) e DTOs
 - [ ] Documentação interativa da API com OpenAPI / Swagger
 - [ ] Validação formal de dígitos de CPF (algoritmo receita federal)
 - [ ] Autenticação e autorização via JWT / Spring Security

@@ -95,4 +95,14 @@ public class TransacaoService {
         }
         return transacaoRepository.findByContaIdAndDataBetween(contaId, dataInicio, dataFim);
     }
+
+    public List<Transacao> findByContaId(Long contaId) {
+        if (contaId == null) {
+            throw new IllegalArgumentException("ContaId não pode ser nulo");
+        }
+        if (!contaRepository.existsById(contaId)) {
+            throw new IllegalArgumentException("Conta não encontrada com o ID: " + contaId);
+        }
+        return transacaoRepository.findByContaId(contaId);
+    }
 }

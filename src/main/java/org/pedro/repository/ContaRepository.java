@@ -16,4 +16,6 @@ public interface ContaRepository extends JpaRepository<Conta, Long> {
     List<Conta> findByTitular(Cliente titular);
 
     boolean existsByNumero(Integer numero);
+
+    void deleteById(Long id);
 }

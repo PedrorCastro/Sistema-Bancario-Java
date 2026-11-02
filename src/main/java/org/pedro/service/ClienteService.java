@@ -41,6 +41,18 @@ public class ClienteService {
         return clienteRepository.findByCpf(cpf);
     }
 
+    public boolean deletarCliente(Long id) {
+        if (id == null) {
+            throw new IllegalArgumentException("ID não pode ser nulo");
+        }
+        if (clienteRepository.existsById(id)) {
+            clienteRepository.deleteById(id);
+            return true;
+        } else {
+            return false;
+        }
+    }
+
     public List<Cliente> listarTodos() {
         return clienteRepository.findAll();
     }

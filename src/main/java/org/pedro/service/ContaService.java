@@ -7,15 +7,22 @@ import org.pedro.model.Cliente;
 import org.pedro.model.Conta;
 import org.pedro.repository.ContaRepository;
 import org.springframework.stereotype.Service;
+import org.pedro.service.ClienteService;
 
 
 @Service 
 public class ContaService {
 
     private final ContaRepository contaRepository;
+    private final ClienteService clienteService;
 
-    public ContaService(ContaRepository contaRepository) {
+    public ContaService(
+        ContaRepository contaRepository,
+        ClienteService clienteService) {
+
         this.contaRepository = contaRepository;
+        this.clienteService = clienteService;
+    
     }
 
     public Conta criarConta(Conta conta) {
@@ -26,6 +33,18 @@ public class ContaService {
             throw new IllegalArgumentException("Conta já cadastrada com o número: " + conta.getNumero());
         }
         return contaRepository.save(conta);
+    }
+
+    public boolean deletarConta(Long id) {
+        if (id == null) {
+            throw new IllegalArgumentException("ID não pode ser nulo");
+        }
+        if (contaRepository.existsById(id)) {
+            contaRepository.deleteById(id);
+            return true;
+        } else {
+            return false;
+        }
     }
 
     public Optional<Conta> buscarPorId(Long id) {

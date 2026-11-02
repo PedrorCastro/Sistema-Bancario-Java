@@ -24,20 +24,22 @@ public class Cliente {
     private String nome;
     private String cpf;
     private String email;
+    private String senha;
 
 
     @OneToMany(mappedBy = "titular", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<Conta> contas = new ArrayList<>();
 
 
-    protected Cliente() {
+    public Cliente() {
     }
 
     // Construtor com parâmetros
-    public Cliente(String nome, String cpf, String email) {
+    public Cliente(String nome, String cpf, String email, String senha) {
         this.nome = nome;
         this.cpf = cpf;
         this.email = email;
+
     }
 
     // Getters e Setters
@@ -83,6 +85,12 @@ public class Cliente {
         this.contas = contas != null ? contas : new ArrayList<>();
     }
 
+    public String getSenha() {
+        return senha;
+    }
+    public void setSenha(String senha) {
+        this.senha = senha;
+    }
 
     public void adicionarConta(Conta conta) {
         if (conta != null) {

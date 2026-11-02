@@ -16,7 +16,7 @@ public class ContaPoupancaTest {
 
     @BeforeEach
     void setUp() {
-        cliente = new Cliente("Pedro", "12345678900", "pedro@teste.com");
+        cliente = new Cliente("Pedro", "12345678900", "pedro@teste.com", "123456789");
         conta = new ContaPoupanca(2001, cliente);
     }
 
