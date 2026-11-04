@@ -2,6 +2,9 @@ package org.pedro.model;
 
 import jakarta.persistence.Entity;
 import jakarta.persistence.Table;
+
+import java.math.BigDecimal;
+
 import org.pedro.exception.SaldoInsuficienteException;
 import org.pedro.exception.ValorInvalidoException;
 
@@ -10,7 +13,7 @@ import org.pedro.exception.ValorInvalidoException;
 @Table(name = "tb_contas_correntes")
 public class ContaCorrente extends Conta {
 
-    private Long limite = 0L;
+    private BigDecimal limite = BigDecimal.ZERO;
 
     public ContaCorrente() {
         super();
@@ -19,24 +22,24 @@ public class ContaCorrente extends Conta {
 
     public ContaCorrente(Integer numero, Cliente titular, double limite) {
         super(numero, titular);
-        this.limite = (long) limite;
+        this.limite = BigDecimal.valueOf(limite);
     }
 
-    public Long getLimite() {
+    public BigDecimal getLimite() {
         return limite;
     }
 
-    public void setLimite(Long limite) {
-        this.limite = limite != null ? limite : 0L;
+    public void setLimite(BigDecimal limite) {
+        this.limite = limite != null ? limite : BigDecimal.ZERO;
     }
 
     @Override
-    public void sacar(Long valor) throws SaldoInsuficienteException, ValorInvalidoException {
+    public void sacar(BigDecimal valor) throws SaldoInsuficienteException, ValorInvalidoException {
         validarValor(valor);
-        long saldoDisponivel = this.getSaldo() + this.limite;
+        BigDecimal saldoDisponivel = this.getSaldo().add(this.limite);
 
-        if (saldoDisponivel >= valor) {
-            this.setSaldo(this.getSaldo() - valor);
+        if (saldoDisponivel.compareTo(valor) >= 0) {
+            this.setSaldo(this.getSaldo().subtract(valor));
             Transacao transacao = new Transacao(valor, TipoTransacao.SAQUE, this);
             getHistorico().add(transacao);
         } else {
@@ -53,4 +56,7 @@ public class ContaCorrente extends Conta {
                 ", limite=" + limite +
                 '}';
     }
+
+
+    
 }

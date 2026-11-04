@@ -10,6 +10,7 @@ import org.springframework.web.bind.annotation.PathVariable;
 import org.pedro.service.TransacaoService;
 import org.pedro.model.Transacao;
 
+import java.math.BigDecimal;
 import java.time.LocalDateTime;
 import java.util.List;
 
@@ -23,18 +24,18 @@ public class TransacaoController {
     }
 
     @PostMapping("/transacoes/depositar") 
-    public void depositar(Long contaId, Long valor) {
+    public void depositar(Long contaId, BigDecimal valor) {
         transacaoService.depositar(contaId, valor);
 
     }
 
     @PostMapping("/transacoes/sacar")
-    public void sacar(Long contaId, Long valor) {
+    public void sacar(Long contaId, BigDecimal valor) {
         transacaoService.sacar(contaId, valor);
     }
 
     @PostMapping("/transacoes/transferir")
-    public void transferir(Long contaOrigemId, Long contaDestinoId, Long valor) {
+    public void transferir(Long contaOrigemId, Long contaDestinoId, BigDecimal valor) {
         transacaoService.transferir(contaOrigemId, contaDestinoId, valor);
     }
 

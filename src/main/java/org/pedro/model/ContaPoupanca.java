@@ -4,6 +4,7 @@ import jakarta.persistence.Entity;
 import jakarta.persistence.Table;
 import org.pedro.exception.SaldoInsuficienteException;
 import org.pedro.exception.ValorInvalidoException;
+import java.math.BigDecimal;
 
 
 @Entity
@@ -19,10 +20,10 @@ public class ContaPoupanca extends Conta {
     }
 
     @Override
-    public void sacar(Long valor) throws SaldoInsuficienteException, ValorInvalidoException {
+    public void sacar(BigDecimal valor) throws SaldoInsuficienteException, ValorInvalidoException {
         validarValor(valor);
-        if (valor <= this.getSaldo()) {
-            this.setSaldo(this.getSaldo() - valor);
+        if (valor.compareTo(this.getSaldo()) <= 0) {
+            this.setSaldo(this.getSaldo().subtract(valor));
             Transacao transacao = new Transacao(valor, TipoTransacao.SAQUE, this);
             getHistorico().add(transacao);
         } else {

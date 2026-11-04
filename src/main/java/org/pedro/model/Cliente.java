@@ -4,13 +4,17 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
+
 import jakarta.persistence.CascadeType;
+import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
 import jakarta.persistence.OneToMany;
 import jakarta.persistence.Table;
+import jakarta.validation.constraints.NotBlank;
 
 @Entity 
 @Table(name = "tb_clientes")
@@ -21,9 +25,17 @@ public class Cliente {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
+    @NotBlank 
+    @Column(nullable = false)
     private String nome;
+
+    @Column(nullable = false, unique = true)
     private String cpf;
+
+    @Column(nullable = false, unique = true)
     private String email;
+
+    @Column(nullable = false)
     private String senha;
 
 
@@ -39,6 +51,7 @@ public class Cliente {
         this.nome = nome;
         this.cpf = cpf;
         this.email = email;
+        this.senha = senha;
 
     }
 
@@ -85,6 +98,7 @@ public class Cliente {
         this.contas = contas != null ? contas : new ArrayList<>();
     }
 
+    @JsonIgnore 
     public String getSenha() {
         return senha;
     }

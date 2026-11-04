@@ -8,6 +8,8 @@ import org.pedro.exception.ValorInvalidoException;
 
 import static org.junit.jupiter.api.Assertions.*;
 
+import java.math.BigDecimal;
+
 
 public class ContaPoupancaTest {
 
@@ -23,22 +25,22 @@ public class ContaPoupancaTest {
     @Test
     @DisplayName("Deve lançar exceção ao depositar valor negativo ou zero")
     void deveLancarExcecaoAoDepositarValorNegativo() {
-        assertThrows(ValorInvalidoException.class, () -> conta.depositar(-1000L));
-        assertThrows(ValorInvalidoException.class, () -> conta.depositar(0L));
+        assertThrows(ValorInvalidoException.class, () -> conta.depositar(BigDecimal.valueOf(-1000)));
+        assertThrows(ValorInvalidoException.class, () -> conta.depositar(BigDecimal.ZERO));
     }
 
     @Test
     @DisplayName("Deve lançar exceção ao sacar valor negativo ou zero")
     void deveLancarExcecaoAoSacarValorNegativo() {
-        assertThrows(ValorInvalidoException.class, () -> conta.sacar(-1000L));
-        assertThrows(ValorInvalidoException.class, () -> conta.sacar(0L));
+        assertThrows(ValorInvalidoException.class, () -> conta.sacar(BigDecimal.valueOf(-1000)));
+        assertThrows(ValorInvalidoException.class, () -> conta.sacar(BigDecimal.ZERO));
     }
 
     @Test
     @DisplayName("Deve realizar depósito com sucesso")
     void deveRealizarDepositoComSucesso() {
-        conta.depositar(300L);
-        assertEquals(300L, conta.getSaldo());
+        conta.depositar(BigDecimal.valueOf(300));
+        assertEquals(BigDecimal.valueOf(300), conta.getSaldo());
         assertEquals(1, conta.getHistorico().size());
         assertEquals(TipoTransacao.DEPOSITO, conta.getHistorico().get(0).getTipo());
     }
@@ -46,10 +48,10 @@ public class ContaPoupancaTest {
     @Test
     @DisplayName("Deve permitir saque quando houver saldo suficiente")
     void devePermitirSaqueComSaldoSuficiente() {
-        conta.depositar(500L);
-        conta.sacar(250L);
+        conta.depositar(BigDecimal.valueOf(500));
+        conta.sacar(BigDecimal.valueOf(250));
 
-        assertEquals(250L, conta.getSaldo());
+        assertEquals(BigDecimal.valueOf(250), conta.getSaldo());
         assertEquals(2, conta.getHistorico().size());
         assertEquals(TipoTransacao.SAQUE, conta.getHistorico().get(1).getTipo());
     }
@@ -57,8 +59,9 @@ public class ContaPoupancaTest {
     @Test
     @DisplayName("Deve lançar exceção ao tentar sacar sem saldo suficiente (Poupança não possui limite)")
     void deveLancarExcecaoSemSaldoSuficiente() {
-        conta.depositar(100L);
-        assertThrows(SaldoInsuficienteException.class, () -> conta.sacar(150L));
-        assertEquals(100L, conta.getSaldo());
+        conta.depositar(BigDecimal.valueOf(100));
+
+        assertThrows(SaldoInsuficienteException.class, () -> conta.sacar(BigDecimal.valueOf(150)));
+        assertEquals(BigDecimal.valueOf(100), conta.getSaldo());
     }
 }

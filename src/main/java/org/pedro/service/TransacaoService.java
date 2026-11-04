@@ -1,5 +1,6 @@
 package org.pedro.service;
 
+import java.math.BigDecimal;
 import java.time.LocalDateTime;
 import java.util.List;
 
@@ -26,7 +27,7 @@ public class TransacaoService {
     }
 
     @Transactional
-    public void depositar(Long contaId, Long valor) {
+    public void depositar(Long contaId, BigDecimal valor) {
         if (contaId == null || valor == null) {
             throw new IllegalArgumentException("ContaId e valor não podem ser nulos");
         }
@@ -38,7 +39,7 @@ public class TransacaoService {
     }
 
     @Transactional
-    public void sacar(Long contaId, Long valor) throws SaldoInsuficienteException, ValorInvalidoException {
+    public void sacar(Long contaId, BigDecimal valor) throws SaldoInsuficienteException, ValorInvalidoException {
         if (contaId == null || valor == null) {
             throw new IllegalArgumentException("ContaId e valor não podem ser nulos");
         }
@@ -50,7 +51,7 @@ public class TransacaoService {
     }
 
     @Transactional
-    public void transferir(Long contaIdOrigem, Long contaIdDestino, Long valor)
+    public void transferir(Long contaIdOrigem, Long contaIdDestino, BigDecimal valor)
             throws SaldoInsuficienteException, ValorInvalidoException {
         if (contaIdOrigem == null || contaIdDestino == null || valor == null) {
             throw new IllegalArgumentException("ContaIdOrigem, ContaIdDestino e valor não podem ser nulos");

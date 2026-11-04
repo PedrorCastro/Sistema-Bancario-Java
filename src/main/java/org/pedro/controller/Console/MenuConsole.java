@@ -1,10 +1,14 @@
 package org.pedro.controller.Console;
 
+import java.math.BigDecimal;
+import java.math.RoundingMode;
 import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Optional;
 import java.util.Scanner;
 
+import org.pedro.dto.request.ContaRequestDTO;
+import org.pedro.dto.request.TipoConta;
 import org.pedro.exception.SaldoInsuficienteException;
 import org.pedro.exception.ValorInvalidoException;
 import org.pedro.model.Cliente;
@@ -18,6 +22,8 @@ import org.pedro.service.TransacaoService;
 import org.springframework.boot.CommandLineRunner;
 import org.springframework.context.annotation.Profile;
 import org.springframework.stereotype.Component;
+
+import io.micrometer.common.lang.Nullable;
 
 
 @Component
@@ -166,7 +172,7 @@ public class MenuConsole implements CommandLineRunner {
             String nome = sc.nextLine().trim();
             System.out.print("Digite seu e-mail: ");
             String email = sc.nextLine().trim();
-            System.out.println("Digite sua senha (mínimo 6 caracteres): ");
+            System.out.print("Digite sua senha (mínimo 6 caracteres): ");
             String senha = sc.nextLine().trim();
 
             try {
@@ -192,15 +198,28 @@ public class MenuConsole implements CommandLineRunner {
                 continue;
             }
 
-            // Definição do número da conta
             int numeroConta = definirNumeroConta(sc);
 
             try {
                 if (tipoConta.equals("1")) {
-                    novaConta = contaService.criarConta(new ContaCorrente(numeroConta, cliente, 5000.00));
+                    ContaRequestDTO dto = new ContaRequestDTO(
+                            numeroConta,
+                            cliente.getId(),
+                            org.pedro.dto.request.TipoConta.CORRENTE,
+                            BigDecimal.valueOf(5000),
+                            BigDecimal.ZERO
+                    );
+                    novaConta = contaService.criarConta(dto);
                     System.out.println("Conta Corrente nº " + numeroConta + " aberta com sucesso!");
                 } else {
-                    novaConta = contaService.criarConta(new ContaPoupanca(numeroConta, cliente));
+                    ContaRequestDTO dto = new ContaRequestDTO(
+                            numeroConta,
+                            cliente.getId(),
+                            org.pedro.dto.request.TipoConta.POUPANCA,
+                            BigDecimal.ZERO,
+                            BigDecimal.ZERO
+                    );
+                    novaConta = contaService.criarConta(dto);
                     System.out.println("Conta Poupança nº " + numeroConta + " aberta com sucesso!");
                 }
             } catch (Exception e) {
@@ -253,7 +272,7 @@ public class MenuConsole implements CommandLineRunner {
         boolean ativa = true;
 
         while (ativa) {
-            Long saldoAtual = consultarSaldoAtual(conta.getId());
+            BigDecimal saldoAtual = consultarSaldoAtual(conta.getId());
             String tipoNome = conta.getClass().getSimpleName();
 
             System.out.println("\n-----------------------------------------");
@@ -261,8 +280,9 @@ public class MenuConsole implements CommandLineRunner {
             System.out.println("  TITULAR: " + (conta.getTitular() != null ? conta.getTitular().getNome() : "Desconhecido"));
             System.out.println("  SALDO ATUAL: R$ " + saldoAtual);
             if (conta instanceof ContaCorrente cc) {
-                System.out.println("  LIMITE DE CRÉDITO: R$ " + cc.getLimite());
-                System.out.println("  DISPONÍVEL TOTAL: R$ " + (saldoAtual + cc.getLimite()));
+                BigDecimal limiteDisponivel = cc.getLimite() != null ? cc.getLimite() : BigDecimal.ZERO;
+                System.out.println("  LIMITE DE CRÉDITO: R$ " + limiteDisponivel);
+                System.out.println("  DISPONÍVEL TOTAL: R$ " + saldoAtual.add(limiteDisponivel));
             }
             System.out.println("-----------------------------------------");
             System.out.println("1. Depositar");
@@ -275,7 +295,7 @@ public class MenuConsole implements CommandLineRunner {
 
             switch (op) {
                 case "1":
-                    Long valorDeposito = lerValorLong(sc, "Digite o valor a depositar: ");
+                    BigDecimal valorDeposito = lerValorBigDecimal(sc, "Digite o valor a depositar: ");
                     if (valorDeposito != null) {
                         try {
                             transacaoService.depositar(conta.getId(), valorDeposito);
@@ -288,7 +308,7 @@ public class MenuConsole implements CommandLineRunner {
                     break;
 
                 case "2":
-                    Long valorSaque = lerValorLong(sc, "Digite o valor a sacar: ");
+                    BigDecimal valorSaque = lerValorBigDecimal(sc, "Digite o valor a sacar: ");
                     if (valorSaque != null) {
                         try {
                             transacaoService.sacar(conta.getId(), valorSaque);
@@ -310,7 +330,7 @@ public class MenuConsole implements CommandLineRunner {
                             System.out.println("Conta de destino número " + numDestino + " não encontrada no banco.");
                             break;
                         }
-                        Long valorTransferencia = lerValorLong(sc, "Digite o valor a transferir: ");
+                        BigDecimal valorTransferencia = lerValorBigDecimal(sc, "Digite o valor a transferir: ");
                         if (valorTransferencia != null) {
                             transacaoService.transferir(conta.getId(), contaDestino.getId(), valorTransferencia);
                             System.out.println("Transferência realizada com sucesso!");
@@ -349,24 +369,24 @@ public class MenuConsole implements CommandLineRunner {
         }
     }
 
-    private Long consultarSaldoAtual(Long contaId) {
+    private BigDecimal consultarSaldoAtual(Long contaId) {
         return contaService.buscarPorId(contaId)
                 .map(Conta::getSaldo)
-                .orElse(0L);
+                .orElse(BigDecimal.ZERO);
     }
 
-    private Long lerValorLong(Scanner sc, String mensagem) {
+    private BigDecimal lerValorBigDecimal(Scanner sc, String mensagem) {
         System.out.print(mensagem);
         String entrada = sc.nextLine().trim();
         try {
-            long valor = Long.parseLong(entrada);
-            if (valor <= 0) {
+            BigDecimal valor = new BigDecimal(entrada).setScale(2, RoundingMode.HALF_UP);
+            if (valor.compareTo(BigDecimal.ZERO) <= 0) {
                 System.out.println("Erro: o valor deve ser maior que zero.");
                 return null;
             }
             return valor;
         } catch (NumberFormatException e) {
-            System.out.println("Erro: digite um número inteiro válido.");
+            System.out.println("Erro: digite um valor numérico válido.");
             return null;
         }
     }
