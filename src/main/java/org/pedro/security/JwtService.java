@@ -18,6 +18,10 @@ public class JwtService {
     @Value("${jwt.expiration}")
     private Long expiration;
 
+    public Long getExpiration() {
+        return expiration;
+    }
+
     public JwtService(JwtEncoder jwtEncoder) {
         this.jwtEncoder = jwtEncoder;
     }
