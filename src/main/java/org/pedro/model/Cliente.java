@@ -15,6 +15,9 @@ import jakarta.persistence.Id;
 import jakarta.persistence.OneToMany;
 import jakarta.persistence.Table;
 import jakarta.validation.constraints.NotBlank;
+import jakarta.persistence.EnumType;
+import jakarta.persistence.Enumerated;
+
 
 @Entity 
 @Table(name = "tb_clientes")
@@ -38,6 +41,10 @@ public class Cliente {
     @Column(nullable = false)
     private String senha;
 
+    @Enumerated(EnumType.STRING)
+    @Column(nullable = false)
+    private Role role;
+
 
     @OneToMany(mappedBy = "titular", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<Conta> contas = new ArrayList<>();
@@ -52,6 +59,7 @@ public class Cliente {
         this.cpf = cpf;
         this.email = email;
         this.senha = senha;
+        this.role = Role.CLIENTE;
 
     }
 
@@ -91,6 +99,10 @@ public class Cliente {
 
     public List<Conta> getContas() {
         return contas;
+    }
+
+    public Role getRole(){
+        return role;
     }
 
 
