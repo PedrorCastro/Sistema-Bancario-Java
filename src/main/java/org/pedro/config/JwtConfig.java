@@ -16,18 +16,17 @@ import com.nimbusds.jose.proc.SecurityContext;
 import org.springframework.security.oauth2.jwt.JwtEncoder;
 import org.springframework.security.oauth2.jwt.NimbusJwtEncoder;
 
+import org.springframework.security.oauth2.jwt.JwtDecoder;
+import org.springframework.security.oauth2.jwt.NimbusJwtDecoder;
+import org.springframework.security.oauth2.jose.jws.MacAlgorithm;
+
 
 @Configuration
 public class JwtConfig{
 
     @Value("${jwt.secret}")
     private String secretKey;
-
-    @Value("${jwt.expiration}")
-    private Long expiration;
-
     
-
     @Bean
     public SecretKey secretKey(){
         if (secretKey == null || secretKey.isBlank()){
@@ -59,5 +58,13 @@ public class JwtConfig{
         JWKSource<SecurityContext> jwkSource = new ImmutableJWKSet<>(jwkSet);
 
         return new NimbusJwtEncoder(jwkSource);
+    }
+
+    @Bean
+    public JwtDecoder jwtDecoder(SecretKey secretKey){
+
+        return NimbusJwtDecoder.withSecretKey(secretKey)
+        .macAlgorithm(MacAlgorithm.HS256)
+        .build(); 
     }
 }
