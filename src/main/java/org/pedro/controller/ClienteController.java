@@ -60,6 +60,7 @@ public class ClienteController {
             .orElseGet(() -> ResponseEntity.notFound().build());
     }
 
+
     @DeleteMapping("/{id}")
     public ResponseEntity<Void> deleteCliente(@PathVariable Long id) {
         if (clienteService.deletarCliente(id)) {
