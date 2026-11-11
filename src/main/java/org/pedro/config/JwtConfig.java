@@ -2,7 +2,7 @@ package org.pedro.config;
 
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.Bean;
-import org.springframework.context.annotation.Value;
+import org.springframework.beans.factory.annotation.Value;
 import javax.crypto.SecretKey;
 import javax.crypto.spec.SecretKeySpec;
 import java.util.Base64;
@@ -19,6 +19,7 @@ import org.springframework.security.oauth2.jwt.NimbusJwtEncoder;
 import org.springframework.security.oauth2.jwt.JwtDecoder;
 import org.springframework.security.oauth2.jwt.NimbusJwtDecoder;
 import org.springframework.security.oauth2.jose.jws.MacAlgorithm;
+
 
 
 @Configuration
@@ -67,4 +68,5 @@ public class JwtConfig{
         .macAlgorithm(MacAlgorithm.HS256)
         .build(); 
     }
+    
 }

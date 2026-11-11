@@ -1,4 +1,4 @@
-package org.pedro.controller.Console;
+package org.pedro.controller.console;
 
 import java.math.BigDecimal;
 import java.math.RoundingMode;
@@ -6,15 +6,12 @@ import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Optional;
 import java.util.Scanner;
-
 import org.pedro.dto.request.ContaRequestDTO;
-import org.pedro.dto.request.TipoConta;
 import org.pedro.exception.SaldoInsuficienteException;
 import org.pedro.exception.ValorInvalidoException;
 import org.pedro.model.Cliente;
 import org.pedro.model.Conta;
 import org.pedro.model.ContaCorrente;
-import org.pedro.model.ContaPoupanca;
 import org.pedro.model.Transacao;
 import org.pedro.service.ClienteService;
 import org.pedro.service.ContaService;
@@ -22,8 +19,6 @@ import org.pedro.service.TransacaoService;
 import org.springframework.boot.CommandLineRunner;
 import org.springframework.context.annotation.Profile;
 import org.springframework.stereotype.Component;
-
-import io.micrometer.common.lang.Nullable;
 
 
 @Component
