@@ -17,6 +17,6 @@ public interface ContaRepository extends JpaRepository<Conta, Long> {
 
     boolean existsByNumero(Integer numero);
 
-    void deleteById(Long id);
+    void deleteById(long id);
 
 }

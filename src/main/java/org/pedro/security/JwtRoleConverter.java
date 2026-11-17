@@ -1,6 +1,7 @@
 package org.pedro.security;
 
 import org.springframework.core.convert.converter.Converter;
+import org.springframework.lang.NonNull;
 import org.springframework.security.oauth2.jwt.Jwt;
 import org.springframework.security.core.GrantedAuthority;
 import java.util.Collection;
@@ -11,7 +12,7 @@ public class JwtRoleConverter implements Converter<Jwt, Collection<GrantedAuthor
     
     
     @Override
-    public Collection<GrantedAuthority> convert(Jwt jwt) {
+    public Collection<GrantedAuthority> convert(@NonNull Jwt jwt) {
         String role = jwt.getClaimAsString("role");
 
         SimpleGrantedAuthority authority = new SimpleGrantedAuthority("ROLE_" + role);

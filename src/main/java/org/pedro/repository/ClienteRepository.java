@@ -17,5 +17,5 @@ public interface ClienteRepository extends JpaRepository<Cliente, Long> {
     
     boolean existsByEmail(String email);
     
-    void deleteById(Long id);
+    void deleteById(long id);
 }
