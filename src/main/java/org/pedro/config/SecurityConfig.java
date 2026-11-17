@@ -38,6 +38,10 @@ public class SecurityConfig {
                 .authorizeHttpRequests(auth -> auth
                     .requestMatchers("/auth/login").permitAll()
                     .requestMatchers(HttpMethod.POST, "/clientes").permitAll()
+                    .requestMatchers(HttpMethod.POST, "/clientes/**").hasRole("ADMIN")
+                    .requestMatchers(HttpMethod.PUT, "/clientes/**").hasRole("ADMIN")
+                    .requestMatchers(HttpMethod.GET, "/clientes/**").hasRole("ADMIN")
+                    .requestMatchers(HttpMethod.DELETE, "/clientes/**").hasRole("ADMIN")
                     .anyRequest().authenticated()
                 );
         return http.build();
