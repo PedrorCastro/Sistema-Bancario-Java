@@ -21,38 +21,72 @@ public class SecurityConfig {
         return new BCryptPasswordEncoder();
     }
 
+    
     @Bean
-    public SecurityFilterChain securityFilterChain(HttpSecurity http,
-        JwtDecoder jwtDecoder, JwtAuthenticationConverter jwtAuthenticationConverter) throws Exception {
+    public SecurityFilterChain securityFilterChain(
+            HttpSecurity http,
+            JwtDecoder jwtDecoder,
+            JwtAuthenticationConverter jwtAuthenticationConverter
+    ) throws Exception {
+
         http
-                .csrf(csrf -> csrf.disable())
-                .sessionManagement(session ->
-                    session.sessionCreationPolicy(SessionCreationPolicy.STATELESS)
+            .csrf(csrf -> csrf.disable())
+
+            .sessionManagement(session ->
+                session.sessionCreationPolicy(SessionCreationPolicy.STATELESS)
+            )
+
+            .oauth2ResourceServer(oauth2 -> oauth2
+                .jwt(jwt -> jwt
+                    .decoder(jwtDecoder)
+                    .jwtAuthenticationConverter(jwtAuthenticationConverter)
                 )
-                .oauth2ResourceServer(oauth2 -> oauth2
-                .jwt(jwt -> jwt.decoder(jwtDecoder)
-                .jwtAuthenticationConverter(jwtAuthenticationConverter)
-                )
-                )
-              
-                .authorizeHttpRequests(auth -> auth
+            )
+
+            .authorizeHttpRequests(auth -> auth
+
+                // Autenticação
                 .requestMatchers("/auth/login").permitAll()
+
+                // Cadastro público de clientes
                 .requestMatchers(HttpMethod.POST, "/clientes").permitAll()
 
-                // Cliente autenticado pode consultar os próprios dados
-                .requestMatchers(HttpMethod.GET, "/clientes/me").hasRole("CLIENTE")
+                // Consulta dos próprios dados
+                .requestMatchers(HttpMethod.GET, "/clientes/me")
+                    .hasRole("CLIENTE")
 
-                // Operações administrativas
-                .requestMatchers(HttpMethod.POST, "/clientes/**").hasRole("ADMIN")
-                .requestMatchers(HttpMethod.PUT, "/clientes/**").hasRole("ADMIN")
-                .requestMatchers(HttpMethod.GET, "/clientes/**").hasRole("ADMIN")
-                .requestMatchers(HttpMethod.DELETE, "/clientes/**").hasRole("ADMIN")
+                // Administração de clientes
+                .requestMatchers("/clientes/**").hasRole("ADMIN")
+
+                // Criação de contas
+                .requestMatchers(HttpMethod.POST, "/contas")
+                    .hasAnyRole("CLIENTE", "ADMIN")
+
+                // Listagem das próprias contas
+                .requestMatchers(HttpMethod.GET, "/contas/minhas")
+                    .hasAnyRole("CLIENTE", "ADMIN")
+
+                // Listagem de todas as contas
+                .requestMatchers(HttpMethod.GET, "/contas")
+                    .hasRole("ADMIN")
+
+                // Consulta individual
+                .requestMatchers(HttpMethod.GET, "/contas/{id}")
+                    .hasAnyRole("CLIENTE", "ADMIN")
+
+                // Exclusão de conta
+                .requestMatchers(HttpMethod.DELETE, "/contas/{id}")
+                    .hasAnyRole("CLIENTE", "ADMIN")
 
                 .requestMatchers("/error").permitAll()
+
+                // Todo o restante exige autenticação
                 .anyRequest().authenticated()
             );
+
         return http.build();
     }
+
 
     @Bean
     public JwtAuthenticationConverter jwtAuthenticationConverter(){

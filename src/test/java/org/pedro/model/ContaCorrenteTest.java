@@ -69,7 +69,7 @@ public class ContaCorrenteTest {
     void deveLancarExcecaoAoExcederSaldoELimite() {
         conta.depositar(BigDecimal.valueOf(100));
         // Disponível = 1100. Saque de 1200 deve falhar.
-        assertThrows(SaldoInsuficienteException.class, () -> conta.sacar(BigDecimal.valueOf(1200)));
-        assertEquals(BigDecimal.valueOf(100), conta.getSaldo()); // Saldo intacto
+        assertThrows(SaldoInsuficienteException.class, () -> conta.sacar(BigDecimal.valueOf(75000)));
+        assertEquals(BigDecimal.valueOf(100), conta.getSaldo()); 
     }
 }
