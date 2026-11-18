@@ -1,0 +1,11 @@
+
+### Cadastro de cliente
+POST http://localhost:8080/clientes
+Content-Type: application/json
+
+{
+    "nome": "Pedro Castro",
+    "cpf": "12345678901",
+    "email": "pedro.teste@email.com",
+    "senha": "Senha123!"
+}

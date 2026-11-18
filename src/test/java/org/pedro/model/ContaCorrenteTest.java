@@ -19,7 +19,8 @@ public class ContaCorrenteTest {
     @BeforeEach
     void setUp() {
         cliente = new Cliente("Pedro", "12345678900", "pedro@teste.com", "123456789");
-        conta = new ContaCorrente(1001, cliente, 1000L); // Limite de 1000
+        conta = new ContaCorrente(123, cliente);
+    
     }
 
     @Test
