@@ -2,7 +2,6 @@ package org.pedro.model;
 
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
-import java.util.Objects;
 
 import jakarta.persistence.Entity;
 import jakarta.persistence.EnumType;
@@ -13,6 +12,7 @@ import jakarta.persistence.Id;
 import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
 import jakarta.persistence.Table;
+import jakarta.persistence.Column;
 
 @Entity
 @Table(name = "tb_transacoes")
@@ -22,6 +22,7 @@ public class Transacao {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
+    @Column(precision = 19, scale = 2)
     private BigDecimal valor;
 
     @Enumerated(EnumType.STRING)
@@ -32,6 +33,10 @@ public class Transacao {
     @ManyToOne
     @JoinColumn(name = "conta_id")
     private Conta conta;
+
+    @ManyToOne
+    @JoinColumn(name = "conta_contraparte_id")
+    private Conta contaContraparte;
 
     protected Transacao() {
     }
@@ -47,6 +52,11 @@ public class Transacao {
         this.tipo = tipo;
         this.conta = conta;
         this.data = LocalDateTime.now();
+    }
+
+    public Transacao(BigDecimal valor, TipoTransacao tipo, Conta conta, Conta contaContraparte) {
+        this(valor, tipo, conta);
+        this.contaContraparte = contaContraparte;
     }
 
     public Long getId() {
@@ -89,16 +99,20 @@ public class Transacao {
         this.conta = conta;
     }
 
+    public Conta getContaContraparte() {
+        return contaContraparte;
+    }
+
     @Override
     public boolean equals(Object o) {
         if (this == o) return true;
         if (!(o instanceof Transacao that)) return false;
-        return Objects.equals(id, that.id);
+        return id != null && id.equals(that.id);
     }
 
     @Override
     public int hashCode() {
-        return Objects.hash(id);
+        return Transacao.class.hashCode();
     }
 
     @Override

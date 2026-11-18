@@ -1,4 +1,7 @@
 target/
+.env
+.env.*
+!.env.example
 !.mvn/wrapper/maven-wrapper.jar
 !**/src/main/**/target/
 !**/src/test/**/target/
@@ -49,6 +52,4 @@ build/
 ### Docker Backups ###
 backups/
 
-
-### Test API ###
-testes-api.http
+### Testes API ###

@@ -80,6 +80,9 @@ public class SecurityConfig {
 
                 .requestMatchers("/error").permitAll()
 
+                // Documentação da API
+                .requestMatchers("/v3/api-docs/**", "/swagger-ui/**", "/swagger-ui.html").permitAll()
+
                 // Todo o restante exige autenticação
                 .anyRequest().authenticated()
             );

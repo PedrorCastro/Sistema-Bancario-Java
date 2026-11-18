@@ -6,7 +6,8 @@ public record ContaResponseDTO(
     Long id,
     String tipoConta,
     BigDecimal saldo,
-    Long clienteId
+    Long clienteId,
+    String status
 ) {
 
 }

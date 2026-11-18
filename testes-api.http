@@ -1,0 +1,89 @@
+@token = cole-aqui-o-token-retornado-no-login
+@contaId = 1
+@contaDestinoId = 2
+
+### 1. Cadastro de cliente
+POST http://localhost:8080/clientes
+Content-Type: application/json
+
+{
+    "nome": "João Silva",
+    "cpf": "45566045839",
+    "email": "joao.teste@email.com",
+    "senha": "Senha123!"
+}
+
+### 2. Cadastro com CPF inválido
+POST http://localhost:8080/clientes
+Content-Type: application/json
+
+{
+    "nome": "João Silva",
+    "cpf": "123",
+    "email": "email-invalido",
+    "senha": ""
+}
+
+### 4. Login
+POST http://localhost:8080/auth/login
+Content-Type: application/json
+
+{
+    "email": "pedro.teste@email.com",
+    "senha": "Senha123!"
+}
+
+### 5. Login inválido
+POST http://localhost:8080/auth/login
+Content-Type: application/json
+
+{
+    "email": "joao.teste@email.com",
+    "senha": "SenhaErrada!"
+}
+
+### 6. Consultar cliente sem autenticação
+GET http://localhost:8080/clientes/1
+
+### 7. Consultar cliente autenticado
+GET http://localhost:8080/clientes/me
+Authorization: Bearer {{token}}
+
+### 8. Depositar
+POST http://localhost:8080/transacoes/depositar
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+    "contaId": {{contaId}},
+    "valor": 25.50
+}
+
+### 9. Sacar
+POST http://localhost:8080/transacoes/sacar
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+    "contaId": {{contaId}},
+    "valor": 10.00
+}
+
+### 10. Transferir para outra conta
+POST http://localhost:8080/transacoes/transferir
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+    "contaOrigemId": {{contaId}},
+    "contaDestinoId": {{contaDestinoId}},
+    "valor": 5.00
+}
+
+### 11. Consultar extrato
+GET http://localhost:8080/transacoes/extrato?contaId={{contaId}}&dataInicio=2026-01-01T00:00:00&dataFim=2027-01-01T00:00:00
+Authorization: Bearer {{token}}
+
+### 12. Consultar transações da conta
+GET http://localhost:8080/transacoes/conta/{{contaId}}
+Authorization: Bearer {{token}}

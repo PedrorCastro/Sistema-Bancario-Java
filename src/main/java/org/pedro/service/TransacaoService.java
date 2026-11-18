@@ -6,8 +6,8 @@ import java.util.List;
 
 import org.pedro.exception.SaldoInsuficienteException;
 import org.pedro.exception.ValorInvalidoException;
+import org.pedro.exception.ContaNaoEncontradaException;
 import org.pedro.model.Conta;
-import org.pedro.model.TipoTransacao;
 import org.pedro.model.Transacao;
 import org.pedro.repository.ContaRepository;
 import org.pedro.repository.TransacaoRepository;
@@ -20,10 +20,15 @@ public class TransacaoService {
 
     private final TransacaoRepository transacaoRepository;
     private final ContaRepository contaRepository;
+    private final ContaService contaService;
 
-    public TransacaoService(TransacaoRepository transacaoRepository, ContaRepository contaRepository) {
+    public TransacaoService(
+            TransacaoRepository transacaoRepository,
+            ContaRepository contaRepository,
+            ContaService contaService) {
         this.transacaoRepository = transacaoRepository;
         this.contaRepository = contaRepository;
+        this.contaService = contaService;
     }
 
     @Transactional
@@ -31,8 +36,8 @@ public class TransacaoService {
         if (contaId == null || valor == null) {
             throw new IllegalArgumentException("ContaId e valor não podem ser nulos");
         }
-        Conta conta = contaRepository.findById(contaId)
-                .orElseThrow(() -> new IllegalArgumentException("Conta não encontrada com o ID: " + contaId));
+        Conta conta = contaService.buscarPorIdParaAtualizacao(contaId)
+                .orElseThrow(ContaNaoEncontradaException::new);
 
         conta.depositar(valor);
         contaRepository.save(conta);
@@ -43,8 +48,8 @@ public class TransacaoService {
         if (contaId == null || valor == null) {
             throw new IllegalArgumentException("ContaId e valor não podem ser nulos");
         }
-        Conta conta = contaRepository.findById(contaId)
-                .orElseThrow(() -> new IllegalArgumentException("Conta não encontrada com o ID: " + contaId));
+        Conta conta = contaService.buscarPorIdParaAtualizacao(contaId)
+                .orElseThrow(ContaNaoEncontradaException::new);
 
         conta.sacar(valor);
         contaRepository.save(conta);
@@ -60,27 +65,32 @@ public class TransacaoService {
             throw new IllegalArgumentException("A conta de origem e a conta de destino não podem ser a mesma");
         }
 
-        Conta contaOrigem = contaRepository.findById(contaIdOrigem)
-                .orElseThrow(() -> new IllegalArgumentException("Conta de origem não encontrada com ID: " + contaIdOrigem));
-        Conta contaDestino = contaRepository.findById(contaIdDestino)
-                .orElseThrow(() -> new IllegalArgumentException("Conta de destino não encontrada com ID: " + contaIdDestino));
+        contaService.verificarAcesso(contaIdOrigem);
 
-        // Executa o débito com validação de saldo/limite
-        contaOrigem.sacar(valor);
-        // Atualiza a transação gerada para o tipo TRANSFERENCIA
-        if (!contaOrigem.getHistorico().isEmpty()) {
-            contaOrigem.getHistorico().get(contaOrigem.getHistorico().size() - 1).setTipo(TipoTransacao.TRANSFERENCIA);
+        Long primeiroId = Math.min(contaIdOrigem, contaIdDestino);
+        Long segundoId = Math.max(contaIdOrigem, contaIdDestino);
+        Conta contaOrigem;
+        Conta contaDestino;
+        if (contaIdOrigem.equals(primeiroId)) {
+            contaOrigem = contaService.buscarPorIdParaAtualizacao(contaIdOrigem)
+                    .orElseThrow(ContaNaoEncontradaException::new);
+            contaDestino = bloquearConta(contaIdDestino);
+        } else {
+            contaDestino = bloquearConta(contaIdDestino);
+            contaOrigem = contaService.buscarPorIdParaAtualizacao(contaIdOrigem)
+                    .orElseThrow(ContaNaoEncontradaException::new);
         }
 
-        // Executa o crédito
-        contaDestino.depositar(valor);
-        // Atualiza a transação gerada para o tipo TRANSFERENCIA
-        if (!contaDestino.getHistorico().isEmpty()) {
-            contaDestino.getHistorico().get(contaDestino.getHistorico().size() - 1).setTipo(TipoTransacao.TRANSFERENCIA);
-        }
+        contaOrigem.transferirPara(contaDestino, valor);
 
         contaRepository.save(contaOrigem);
         contaRepository.save(contaDestino);
+    }
+
+    private Conta bloquearConta(Long contaId) {
+        return contaRepository.lockRowById(contaId)
+                .flatMap(contaRepository::findById)
+                .orElseThrow(ContaNaoEncontradaException::new);
     }
 
     @Transactional(readOnly = true)
@@ -91,19 +101,18 @@ public class TransacaoService {
         if (dataInicio.isAfter(dataFim)) {
             throw new IllegalArgumentException("Data de início não pode ser posterior à data de fim");
         }
-        if (!contaRepository.existsById(contaId)) {
-            throw new IllegalArgumentException("Conta não encontrada com o ID: " + contaId);
-        }
+        contaService.buscarPorId(contaId)
+                .orElseThrow(ContaNaoEncontradaException::new);
         return transacaoRepository.findByContaIdAndDataBetween(contaId, dataInicio, dataFim);
     }
 
+    @Transactional(readOnly = true)
     public List<Transacao> findByContaId(Long contaId) {
         if (contaId == null) {
             throw new IllegalArgumentException("ContaId não pode ser nulo");
         }
-        if (!contaRepository.existsById(contaId)) {
-            throw new IllegalArgumentException("Conta não encontrada com o ID: " + contaId);
-        }
+        contaService.buscarPorId(contaId)
+                .orElseThrow(ContaNaoEncontradaException::new);
         return transacaoRepository.findByContaId(contaId);
     }
 }

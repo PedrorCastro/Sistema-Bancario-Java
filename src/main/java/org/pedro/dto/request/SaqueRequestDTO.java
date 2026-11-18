@@ -2,12 +2,15 @@ package org.pedro.dto.request;
 
 import java.math.BigDecimal;
 
-import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.NotNull;
+import jakarta.validation.constraints.Positive;
 
 public record SaqueRequestDTO(
-    @NotBlank(message = "O campo contaId não pode estar em branco")
+    @NotNull(message = "O campo contaId é obrigatório")
+    @Positive(message = "O campo contaId deve ser positivo")
     Long contaId,
-    @NotBlank(message = "O campo valor não pode estar em branco")
+    @NotNull(message = "O campo valor é obrigatório")
+    @Positive(message = "O campo valor deve ser positivo")
     BigDecimal valor
 ) {
 

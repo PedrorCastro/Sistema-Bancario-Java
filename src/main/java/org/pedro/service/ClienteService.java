@@ -13,6 +13,7 @@ import org.pedro.model.Role;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.authentication.AnonymousAuthenticationToken;
+import org.springframework.transaction.annotation.Transactional;
 
 @Service 
 public class ClienteService {
@@ -85,16 +86,24 @@ public class ClienteService {
         return clienteRepository.findAll();
     }
 
+    @Transactional
     public boolean deletarCliente(Long id) {
         if (id == null) {
             throw new IllegalArgumentException("ID não pode ser nulo");
         }
-        if (clienteRepository.existsById(id)) {
-            clienteRepository.deleteById(id);
-            return true;
-        } else {
+
+        Optional<Cliente> cliente = clienteRepository.findById(id);
+        if (cliente.isEmpty()) {
             return false;
         }
+
+        if (!cliente.get().getContas().isEmpty()) {
+            throw new IllegalArgumentException(
+                    "Não é possível excluir um cliente que ainda possui contas; encerre-as e preserve o histórico");
+        }
+
+        clienteRepository.delete(cliente.get());
+        return true;
     }
 
     public Optional<Cliente> buscarClienteLogado() {

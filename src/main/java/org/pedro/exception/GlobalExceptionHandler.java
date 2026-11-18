@@ -28,6 +28,17 @@ public class GlobalExceptionHandler {
     public ResponseEntity<Object> handleIllegalArgument(IllegalArgumentException ex, WebRequest request) {
         return buildResponse(HttpStatus.BAD_REQUEST, ex.getMessage());
     }
+
+    @ExceptionHandler(ContaNaoEncontradaException.class)
+    public ResponseEntity<Object> handleContaNaoEncontrada(ContaNaoEncontradaException ex) {
+        return buildResponse(HttpStatus.NOT_FOUND, ex.getMessage());
+    }
+
+    @ExceptionHandler(ContaEncerradaException.class)
+    public ResponseEntity<Object> handleContaEncerrada(ContaEncerradaException ex) {
+        return buildResponse(HttpStatus.CONFLICT, ex.getMessage());
+    }
+
     @ExceptionHandler(AuthenticationException.class)
     public ResponseEntity<Object> handleAuthenticationException(AuthenticationException ex) {
         return buildResponse(HttpStatus.UNAUTHORIZED, "E-mail ou senha inválidos.");

@@ -20,11 +20,12 @@ public class ContaPoupanca extends Conta {
     }
 
     @Override
-    public void sacar(BigDecimal valor) throws SaldoInsuficienteException, ValorInvalidoException {
+    protected void sacar(BigDecimal valor, TipoTransacao tipo, Conta contraparte)
+            throws SaldoInsuficienteException, ValorInvalidoException {
         validarValor(valor);
         if (valor.compareTo(this.getSaldo()) <= 0) {
             this.setSaldo(this.getSaldo().subtract(valor));
-            Transacao transacao = new Transacao(valor, TipoTransacao.SAQUE, this);
+            Transacao transacao = new Transacao(valor, tipo, this, contraparte);
             getHistorico().add(transacao);
         } else {
             throw new SaldoInsuficienteException("Saldo insuficiente: valor do saque excede o saldo da poupança");

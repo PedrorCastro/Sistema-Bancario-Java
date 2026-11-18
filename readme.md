@@ -83,7 +83,8 @@ Retorna uma lista com todas as contas cadastradas, utilizando DTOs para evitar e
     "id": 1,
     "tipoConta": "ContaCorrente",
     "saldo": 5000.00,
-    "clienteId": 1
+    "clienteId": 1,
+    "status": "ATIVA"
   }
 ]
 ```
@@ -103,7 +104,8 @@ Exemplo: `GET /contas/1`
   "id": 1,
   "tipoConta": "ContaCorrente",
   "saldo": 5000.00,
-  "clienteId": 1
+  "clienteId": 1,
+  "status": "ATIVA"
 }
 ```
 
@@ -146,6 +148,23 @@ Exemplo: `DELETE /contas/2`
 **Resposta (204 No Content):**
 
 Sem conteúdo retornado em caso de sucesso.
+
+O endpoint encerra logicamente a conta: exige saldo zero, preserva o histórico e impede novas movimentações.
+
+### 5. Transações
+
+Os endpoints de depósito, saque e transferência recebem JSON validado. O titular precisa ser dono da conta debitada; a conta creditada em uma transferência pode pertencer a outro cliente. A consulta de extrato permite acesso ao titular da conta e a administradores.
+
+Exemplo de depósito:
+
+```http
+POST /transacoes/depositar
+Content-Type: application/json
+
+{"contaId": 1, "valor": 25.50}
+```
+
+As respostas de extrato usam `TransacaoResponseDTO` e não expõem entidades JPA; os lançamentos de transferência incluem o ID da conta contraparte.
 
 ---
 
@@ -253,17 +272,23 @@ cd Sistema-Bancario-Java
 
 ### 2. Configurar as variáveis de ambiente
 
-Configure as variáveis necessárias para a conexão com o PostgreSQL, de acordo com as propriedades utilizadas em `application.properties`.
+Configure as variáveis necessárias para a conexão com o PostgreSQL e para a assinatura dos tokens JWT. O Docker Compose lê essas variáveis do ambiente ou de um arquivo `.env` local (não versionado).
 
-Exemplo:
+Copie o template e preencha os segredos:
 
-```env
-URL_BANCO=jdbc:postgresql://localhost:5432/sistema_bancario
-DB_USER=seu_usuario
-DB_PASSWORD=sua_senha
+```bash
+cp .env.example .env
 ```
 
-> Não compartilhe credenciais reais nem envie arquivos `.env` com informações sensíveis para o GitHub.
+`JWT_SECRET` deve ser uma chave Base64 com pelo menos 32 bytes decodificados. Não compartilhe credenciais reais nem envie o arquivo `.env` com informações sensíveis para o GitHub. O esquema é gerenciado pelo Flyway e o Hibernate usa `ddl-auto=validate`.
+
+Gere valores aleatórios para `DB_PASSWORD` e `JWT_SECRET` com `openssl rand -base64 32` (execute duas vezes e cole cada resultado na variável correspondente).
+
+Se o volume PostgreSQL já tiver sido inicializado com credenciais anteriores, alterar `DB_PASSWORD` não altera a senha armazenada no banco; rotacione também a senha do usuário dentro do PostgreSQL.
+
+Na primeira inicialização com Flyway, um banco existente e não vazio é registrado como baseline na versão 1 e recebe a migração incremental da versão 2. Faça backup antes dessa primeira inicialização; não é necessário apagar o volume. Bancos vazios executam as migrações desde a versão 1.
+
+No GitHub Codespaces, configure `DB_PASSWORD` e `JWT_SECRET` como Codespaces secrets para que sejam injetados no ambiente; não os coloque no repositório.
 
 ### 3. Subir o banco de dados
 
@@ -274,6 +299,8 @@ docker compose up -d
 ```
 
 Esse comando inicia os serviços definidos no Docker Compose, incluindo o PostgreSQL e os serviços de backup configurados.
+
+O PostgreSQL fica publicado apenas em `localhost` por padrão. Defina `DB_PASSWORD` antes de iniciar os serviços.
 
 ### 4. Executar os testes
 
@@ -287,7 +314,12 @@ mvn clean test
 
 Para iniciar a aplicação utilizando Maven:
 
+O Maven não carrega automaticamente o arquivo `.env`; carregue-o no shell antes de iniciar a aplicação:
+
 ```bash
+set -a
+. ./.env
+set +a
 mvn spring-boot:run
 ```
 

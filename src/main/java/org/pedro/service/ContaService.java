@@ -12,6 +12,7 @@ import org.pedro.model.Conta;
 import org.pedro.model.ContaCorrente;
 import org.pedro.model.ContaPoupanca;
 import org.pedro.model.Role;
+import org.pedro.exception.ContaNaoEncontradaException;
 import org.pedro.repository.ContaRepository;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -82,14 +83,46 @@ public class ContaService {
     @Transactional
     public boolean deletarConta(Long id) {
 
-        Optional<Conta> conta = buscarPorId(id);
-
+        Optional<Conta> conta = buscarPorIdParaAtualizacao(id);
         if (conta.isEmpty()) {
             return false;
         }
 
-        contaRepository.delete(conta.get());
+        if (!conta.get().isAtiva()) {
+            return false;
+        }
+
+        conta.get().encerrar();
+        contaRepository.save(conta.get());
         return true;
+    }
+
+    @Transactional
+    public Optional<Conta> buscarPorIdParaAtualizacao(Long id) {
+        if (id == null) {
+            throw new IllegalArgumentException("ID não pode ser nulo");
+        }
+
+        Cliente autenticado = buscarClienteAutenticado();
+        Optional<Long> lockedId = isAdmin(autenticado)
+                ? contaRepository.lockRowById(id)
+                : contaRepository.lockRowByIdAndTitularEmail(id, autenticado.getEmail());
+
+        return lockedId.flatMap(contaRepository::findById);
+    }
+
+    public void verificarAcesso(Long id) {
+        if (id == null) {
+            throw new IllegalArgumentException("ID não pode ser nulo");
+        }
+
+        Cliente autenticado = buscarClienteAutenticado();
+        boolean acessivel = isAdmin(autenticado)
+                ? contaRepository.existsById(id)
+                : contaRepository.existsByIdAndTitular_Email(id, autenticado.getEmail());
+        if (!acessivel) {
+            throw new ContaNaoEncontradaException();
+        }
     }
 
     public Optional<Conta> buscarPorId(Long id) {

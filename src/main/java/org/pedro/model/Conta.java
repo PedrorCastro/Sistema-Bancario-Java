@@ -3,9 +3,9 @@ package org.pedro.model;
 import java.math.BigDecimal;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Objects;
 
 import jakarta.persistence.CascadeType;
+import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
@@ -16,8 +16,11 @@ import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
 import jakarta.persistence.OneToMany;
 import jakarta.persistence.Table;
+import jakarta.persistence.EnumType;
+import jakarta.persistence.Enumerated;
 import org.pedro.exception.SaldoInsuficienteException;
 import org.pedro.exception.ValorInvalidoException;
+import org.pedro.exception.ContaEncerradaException;
 
 @Entity
 @Table(name = "tb_contas")
@@ -34,7 +37,12 @@ public abstract class Conta {
     @JoinColumn(name = "titular_id")
     private Cliente titular;
 
+    @Column(precision = 19, scale = 2)
     private BigDecimal saldo = BigDecimal.ZERO;
+
+    @Enumerated(EnumType.STRING)
+    @Column(nullable = false)
+    private StatusConta status = StatusConta.ATIVA;
 
     @OneToMany(mappedBy = "conta", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<Transacao> historico = new ArrayList<>();
@@ -75,6 +83,24 @@ public abstract class Conta {
         return saldo;
     }
 
+    public StatusConta getStatus() {
+        return status;
+    }
+
+    public boolean isAtiva() {
+        return status == StatusConta.ATIVA;
+    }
+
+    public void encerrar() {
+        if (!isAtiva()) {
+            throw new ContaEncerradaException("A conta já está encerrada");
+        }
+        if (saldo.compareTo(BigDecimal.ZERO) != 0) {
+            throw new IllegalArgumentException("Só é possível encerrar uma conta com saldo zero");
+        }
+        status = StatusConta.ENCERRADA;
+    }
+
     protected void setSaldo(BigDecimal saldo) {
         this.saldo = saldo;
     }
@@ -87,13 +113,38 @@ public abstract class Conta {
         this.historico = historico != null ? historico : new ArrayList<>();
     }
 
-    public abstract void sacar(BigDecimal valor) throws SaldoInsuficienteException, ValorInvalidoException;
+    public void sacar(BigDecimal valor) throws SaldoInsuficienteException, ValorInvalidoException {
+        validarContaAtiva();
+        sacar(valor, TipoTransacao.SAQUE, null);
+    }
+
+    protected abstract void sacar(BigDecimal valor, TipoTransacao tipo, Conta contraparte)
+            throws SaldoInsuficienteException, ValorInvalidoException;
 
     public void depositar(BigDecimal valor) throws ValorInvalidoException {
+        validarContaAtiva();
+        depositar(valor, TipoTransacao.DEPOSITO, null);
+    }
+
+    private void depositar(BigDecimal valor, TipoTransacao tipo, Conta contraparte)
+            throws ValorInvalidoException {
         validarValor(valor);
         this.saldo = this.saldo.add(valor);
-        Transacao transacao = new Transacao(valor, TipoTransacao.DEPOSITO, this);
+        Transacao transacao = new Transacao(valor, tipo, this, contraparte);
         historico.add(transacao);
+    }
+
+    public void transferirPara(Conta destino, BigDecimal valor)
+            throws SaldoInsuficienteException, ValorInvalidoException {
+        validarContaAtiva();
+        if (destino == null || destino == this
+                || (id != null && id.equals(destino.id))) {
+            throw new IllegalArgumentException("A conta de destino deve ser diferente da conta de origem");
+        }
+        destino.validarContaAtiva();
+        validarValor(valor);
+        sacar(valor, TipoTransacao.TRANSFERENCIA, destino);
+        destino.depositar(valor, TipoTransacao.TRANSFERENCIA, this);
     }
 
     protected void validarValor(BigDecimal valor) throws ValorInvalidoException {
@@ -102,16 +153,22 @@ public abstract class Conta {
         }
     }
 
+    private void validarContaAtiva() {
+        if (!isAtiva()) {
+            throw new ContaEncerradaException("Não é possível movimentar uma conta encerrada");
+        }
+    }
+
     @Override
     public boolean equals(Object o) {
         if (this == o) return true;
         if (!(o instanceof Conta conta)) return false;
-        return Objects.equals(numero, conta.numero);
+        return id != null && id.equals(conta.id);
     }
 
     @Override
     public int hashCode() {
-        return Objects.hash(numero);
+        return Conta.class.hashCode();
     }
 
     @Override

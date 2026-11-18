@@ -8,7 +8,8 @@ public record TransacaoResponseDTO(
     String tipoTransacao,
     BigDecimal valor,
     LocalDateTime dataHora,
-    Long contaId
+    Long contaId,
+    Long contaContraparteId
 ) {
 
 }

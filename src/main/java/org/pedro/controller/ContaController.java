@@ -89,7 +89,8 @@ public class ContaController {
                 conta.getId(),
                 conta.getClass().getSimpleName(),
                 conta.getSaldo(),
-                conta.getTitular().getId()
+                conta.getTitular().getId(),
+                conta.getStatus().name()
         );
     }
 }

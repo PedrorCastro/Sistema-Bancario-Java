@@ -2,14 +2,18 @@ package org.pedro.dto.request;
 
 import java.math.BigDecimal;
 
-import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.NotNull;
+import jakarta.validation.constraints.Positive;
 
 public record TransferenciaRequestDTO(
-    @NotBlank(message = "O campo contaOrigemId não pode estar em branco")
+    @NotNull(message = "O campo contaOrigemId é obrigatório")
+    @Positive(message = "O campo contaOrigemId deve ser positivo")
     Long contaOrigemId,
-    @NotBlank(message = "O campo contaDestinoId não pode estar em branco")
+    @NotNull(message = "O campo contaDestinoId é obrigatório")
+    @Positive(message = "O campo contaDestinoId deve ser positivo")
     Long contaDestinoId,
-    @NotBlank(message = "O campo valor não pode estar em branco")
+    @NotNull(message = "O campo valor é obrigatório")
+    @Positive(message = "O campo valor deve ser positivo")
     BigDecimal valor
 
 
