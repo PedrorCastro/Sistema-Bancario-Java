@@ -4,6 +4,7 @@ import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.Pattern;
 import jakarta.validation.constraints.Size;
+import org.pedro.validation.ValidCPF;
 
 public record ClienteRequestDTO(
 
@@ -11,10 +12,7 @@ public record ClienteRequestDTO(
     String nome,
 
     @NotBlank(message = "O CPF não pode estar em branco")
-    @Pattern(
-        regexp = "\\d{3}\\.\\d{3}\\.\\d{3}-\\d{2}",
-        message = "O CPF deve estar no formato XXX.XXX.XXX-XX"
-    )
+    @ValidCPF
     String cpf,
 
     @NotBlank(message = "O email não pode estar em branco")
