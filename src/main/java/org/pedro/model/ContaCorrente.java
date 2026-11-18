@@ -13,16 +13,16 @@ import org.pedro.exception.ValorInvalidoException;
 @Table(name = "tb_contas_correntes")
 public class ContaCorrente extends Conta {
 
-    private BigDecimal limite = BigDecimal.ZERO;
+    private BigDecimal limite = new BigDecimal("5000.00"); // Limite padrão de R$ 5000,00
 
     public ContaCorrente() {
         super();
     }
 
 
-    public ContaCorrente(Integer numero, Cliente titular, double limite) {
+    public ContaCorrente(Integer numero, Cliente titular) {
         super(numero, titular);
-        this.limite = BigDecimal.valueOf(limite);
+        this.limite = new BigDecimal("5000.00");
     }
 
     public BigDecimal getLimite() {

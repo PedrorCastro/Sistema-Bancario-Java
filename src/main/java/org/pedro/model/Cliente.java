@@ -43,7 +43,7 @@ public class Cliente {
 
     @Enumerated(EnumType.STRING)
     @Column(nullable = false)
-    private Role role;
+    private Role role = Role.CLIENTE;
 
 
     @OneToMany(mappedBy = "titular", cascade = CascadeType.ALL, orphanRemoval = true)
@@ -53,14 +53,12 @@ public class Cliente {
     public Cliente() {
     }
 
-    // Construtor com parâmetros
+    // Construtor
     public Cliente(String nome, String cpf, String email, String senha) {
         this.nome = nome;
         this.cpf = cpf;
         this.email = email;
         this.senha = senha;
-        this.role = Role.CLIENTE;
-
     }
 
     // Getters e Setters

@@ -22,7 +22,7 @@ import org.springframework.stereotype.Component;
 
 
 @Component
-@Profile("!test")
+@Profile("console")
 public class MenuConsole implements CommandLineRunner {
 
     private final ClienteService clienteService;

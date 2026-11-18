@@ -7,6 +7,7 @@ import org.pedro.model.Cliente;
 import org.pedro.repository.ClienteRepository;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
+import jakarta.persistence.Enumerated;
 import org.pedro.model.Role;
 
 @Service 
@@ -21,7 +22,7 @@ public class ClienteService {
     }
 
     public Cliente cadastrarCliente(Cliente cliente) {
-
+        
         if (cliente == null || cliente.getCpf() == null
                 || cliente.getCpf().trim().isEmpty()) {
             throw new IllegalArgumentException(
@@ -39,7 +40,9 @@ public class ClienteService {
             throw new IllegalArgumentException("Email não pode ser vazio");
         }
 
-        if (clienteRepository.existsByEmail(cliente.getEmail().trim())) {
+        String emailNormalizado = cliente.getEmail().trim().toLowerCase();
+
+        if (clienteRepository.existsByEmail(emailNormalizado)) {
             throw new IllegalArgumentException("Email já cadastrado");
         }
 
@@ -47,12 +50,8 @@ public class ClienteService {
             throw new IllegalArgumentException("Senha não pode ser vazia");
         }
 
-        cliente.setEmail(cliente.getEmail().trim().toLowerCase());
-
-        cliente.setRole(Role.CLIENTE);
-
+        cliente.setEmail(emailNormalizado);
         cliente.setSenha(passwordEncoder.encode(cliente.getSenha()));
-       
 
         return clienteRepository.save(cliente);
     }
