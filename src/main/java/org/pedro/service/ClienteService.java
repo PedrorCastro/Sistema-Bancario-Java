@@ -10,6 +10,10 @@ import org.springframework.stereotype.Service;
 import jakarta.persistence.Enumerated;
 import org.pedro.model.Role;
 
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.security.authentication.AnonymousAuthenticationToken;
+
 @Service 
 public class ClienteService {
 
@@ -22,7 +26,7 @@ public class ClienteService {
     }
 
     public Cliente cadastrarCliente(Cliente cliente) {
-        
+
         if (cliente == null || cliente.getCpf() == null
                 || cliente.getCpf().trim().isEmpty()) {
             throw new IllegalArgumentException(
@@ -91,5 +95,21 @@ public class ClienteService {
         } else {
             return false;
         }
+    }
+
+    public Optional<Cliente> buscarClienteLogado() {
+
+        Authentication authentication =
+                SecurityContextHolder.getContext().getAuthentication();
+
+        if (authentication == null
+                || !authentication.isAuthenticated()
+                || authentication instanceof AnonymousAuthenticationToken) {
+            return Optional.empty();
+        }
+
+        String email = authentication.getName();
+
+        return clienteRepository.findByEmail(email);
     }
 }

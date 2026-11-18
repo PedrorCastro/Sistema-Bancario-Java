@@ -57,6 +57,18 @@ public class ClienteController {
             .orElseGet(() -> ResponseEntity.notFound().build());
     }
 
+    @GetMapping("/me")
+    public ResponseEntity<ClienteResponseDTO> getClienteLogado() {
+        return clienteService.buscarClienteLogado()
+            .map(cliente -> ResponseEntity.ok(
+                    new ClienteResponseDTO(
+                            cliente.getNome(),
+                            cliente.getCpf(),
+                            cliente.getEmail()
+                    )
+            ))
+            .orElseGet(() -> ResponseEntity.notFound().build());
+    }
 
     @DeleteMapping("/{id}")
     public ResponseEntity<Void> deleteCliente(@PathVariable Long id) {

@@ -1,11 +1,46 @@
-
-### Cadastro de cliente
+### 1. Cadastro de cliente
 POST http://localhost:8080/clientes
 Content-Type: application/json
 
 {
-    "nome": "Pedro Castro",
-    "cpf": "12345678901",
+    "nome": "João Silva",
+    "cpf": "529.982.257-25",
+    "email": "joao.teste@teste.com",
+    "senha": "Senha123!"
+}
+
+### 2. Cadastro com CPF inválido
+POST http://localhost:8080/clientes
+Content-Type: application/json
+
+{
+    "nome": "João Silva",
+    "cpf": "123",
+    "email": "email-invalido",
+    "senha": ""
+}
+
+### 4. Login
+POST http://localhost:8080/auth/login
+Content-Type: application/json
+
+{
     "email": "pedro.teste@email.com",
     "senha": "Senha123!"
 }
+
+### 5. Login inválido
+POST http://localhost:8080/auth/login
+Content-Type: application/json
+
+{
+    "email": "joao.teste@email.com",
+    "senha": "SenhaErrada!"
+}
+
+### 6. Consultar cliente sem autenticação
+GET http://localhost:8080/clientes/1
+
+### 7. Consultar cliente autenticado
+GET http://localhost:8080/clientes/me
+Authorization: Bearer eyJraWQiOiJiYW5jby1hcGkiLCJhbGciOiJIUzI1NiJ9.eyJzdWIiOiJwZWRyby50ZXN0ZUBlbWFpbC5jb20iLCJyb2xlIjoiQ0xJRU5URSIsImV4cCI6MTc5NTAxNDM4MywiaWF0IjoxNzk1MDEwNzgzfQ.UdEyQmp1oW4oV4NcTRxVH3uLc0xd-mjj8Hm1LDBGoIE

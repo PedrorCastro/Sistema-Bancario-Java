@@ -36,14 +36,21 @@ public class SecurityConfig {
                 )
               
                 .authorizeHttpRequests(auth -> auth
-                    .requestMatchers("/auth/login").permitAll()
-                    .requestMatchers(HttpMethod.POST, "/clientes").permitAll()
-                    .requestMatchers(HttpMethod.POST, "/clientes/**").hasRole("ADMIN")
-                    .requestMatchers(HttpMethod.PUT, "/clientes/**").hasRole("ADMIN")
-                    .requestMatchers(HttpMethod.GET, "/clientes/**").hasRole("ADMIN")
-                    .requestMatchers(HttpMethod.DELETE, "/clientes/**").hasRole("ADMIN")
-                    .anyRequest().authenticated()
-                );
+                .requestMatchers("/auth/login").permitAll()
+                .requestMatchers(HttpMethod.POST, "/clientes").permitAll()
+
+                // Cliente autenticado pode consultar os próprios dados
+                .requestMatchers(HttpMethod.GET, "/clientes/me").hasRole("CLIENTE")
+
+                // Operações administrativas
+                .requestMatchers(HttpMethod.POST, "/clientes/**").hasRole("ADMIN")
+                .requestMatchers(HttpMethod.PUT, "/clientes/**").hasRole("ADMIN")
+                .requestMatchers(HttpMethod.GET, "/clientes/**").hasRole("ADMIN")
+                .requestMatchers(HttpMethod.DELETE, "/clientes/**").hasRole("ADMIN")
+
+                .requestMatchers("/error").permitAll()
+                .anyRequest().authenticated()
+            );
         return http.build();
     }
 
