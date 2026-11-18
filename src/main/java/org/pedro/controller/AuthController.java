@@ -11,6 +11,7 @@ import org.pedro.dto.response.AuthResponseDTO;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
 import org.pedro.security.ClienteDetails;
+import jakarta.validation.Valid;
 
 @RestController
 @RequestMapping("/auth")
@@ -29,7 +30,7 @@ public class AuthController{
     }
 
     @PostMapping("/login")
-    public AuthResponseDTO login(@RequestBody AuthRequestDTO request){
+    public AuthResponseDTO login(@Valid @RequestBody AuthRequestDTO request){
         Authentication authentication = authenticationManager.authenticate(
             new UsernamePasswordAuthenticationToken(
                 request.email(),
