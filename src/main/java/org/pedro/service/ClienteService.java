@@ -7,6 +7,7 @@ import org.pedro.model.Cliente;
 import org.pedro.repository.ClienteRepository;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
+import org.pedro.model.Role;
 
 @Service 
 public class ClienteService {
@@ -48,9 +49,10 @@ public class ClienteService {
 
         cliente.setEmail(cliente.getEmail().trim().toLowerCase());
 
-        String senhaCriptografada = passwordEncoder.encode(cliente.getSenha());
+        cliente.setRole(Role.CLIENTE);
 
-        cliente.setSenha(senhaCriptografada);
+        cliente.setSenha(passwordEncoder.encode(cliente.getSenha()));
+       
 
         return clienteRepository.save(cliente);
     }

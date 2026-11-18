@@ -13,18 +13,15 @@ import org.springframework.web.bind.annotation.PathVariable;
 import org.pedro.model.Cliente;
 import org.pedro.dto.request.ClienteRequestDTO;
 import org.pedro.dto.response.ClienteResponseDTO;
-import org.springframework.security.crypto.password.PasswordEncoder;
 
 @RestController
 @RequestMapping("/clientes")
 public class ClienteController {
 
     private final ClienteService clienteService;
-    private final PasswordEncoder passwordEncoder;
 
-    public ClienteController(ClienteService clienteService, PasswordEncoder passwordEncoder) {
+    public ClienteController(ClienteService clienteService) {
         this.clienteService = clienteService;
-        this.passwordEncoder = passwordEncoder;
     }
 
     @PostMapping
@@ -33,7 +30,7 @@ public class ClienteController {
         cliente.setNome(clienteRequestDTO.nome());
         cliente.setEmail(clienteRequestDTO.email());
         cliente.setCpf(clienteRequestDTO.cpf());
-        cliente.setSenha(passwordEncoder.encode(clienteRequestDTO.senha()));
+        cliente.setSenha(clienteRequestDTO.senha());
 
         Cliente clienteSalvo = clienteService.cadastrarCliente(cliente);
         ClienteResponseDTO clienteResponseDTO = new ClienteResponseDTO(

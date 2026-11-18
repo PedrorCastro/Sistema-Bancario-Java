@@ -22,9 +22,11 @@ public class CustomUserDetailsService implements UserDetailsService {
     public UserDetails loadUserByUsername(String email)
             throws UsernameNotFoundException {
 
-        Cliente cliente = clienteRepository.findByEmail(email)
+        String emailNormalizado = email.trim().toLowerCase();
+
+        Cliente cliente = clienteRepository.findByEmail(emailNormalizado)
                 .orElseThrow(() -> new UsernameNotFoundException(
-                        "Cliente não encontrado: " + email
+                        "Cliente não encontrado: " + emailNormalizado
                 ));
 
         return new ClienteDetails(cliente);
