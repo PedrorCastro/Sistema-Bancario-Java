@@ -48,3 +48,7 @@ build/
 
 ### Docker Backups ###
 backups/
+
+
+### Test API ###
+testes-api.http
